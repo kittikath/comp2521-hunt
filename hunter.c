@@ -45,9 +45,8 @@ void randStartLocation(void)
    while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
       start = randGen(NUM_REAL_PLACES);
    }   
-   const char *abbrev = placeIdToAbbrev(start);
-   char *location = strdup(abbrev);
-   registerBestPlay(location, "Let's crash Dracula's wedding");
+   const char *location = placeIdToAbbrev(start);
+   registerBestPlay(location, "Let's crash Dracula's wedding!");
 }
 
 void randMove(HunterView hv)
@@ -56,10 +55,9 @@ void randMove(HunterView hv)
    PlaceId *validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
    
    int move = randGen(numReturnedLocs);
-   const char *abbrev = placeIdToAbbrev(validLocs[move]);
-   char *location = strdup(abbrev);
+   const char *location = placeIdToAbbrev(validLocs[move]);
    free(validLocs);
-   registerBestPlay(location, "We're onto your scent");   
+   registerBestPlay(location, "Don't run, I'm not the sun.");   
 }
 
 int randGen(int max) {

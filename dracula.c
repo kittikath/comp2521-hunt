@@ -45,9 +45,8 @@ void randStartLocation(void)
    while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
       start = randGen(NUM_REAL_PLACES);
    }   
-   const char *abbrev = placeIdToAbbrev(start);
-   char *location = strdup(abbrev);
-   registerBestPlay(location, "Mwahahahaha");
+   const char *location = placeIdToAbbrev(start);
+   registerBestPlay(location, "You're all I've ever wanted, I've wait my whole life to bite the right one...");
 }
 
 void randMove(DraculaView dv)
@@ -57,13 +56,12 @@ void randMove(DraculaView dv)
    
    if (numReturnedMoves > 0) {
       int move = randGen(numReturnedMoves);
-      const char *abbrev = placeIdToAbbrev(validMoves[move]);
-      char *location = strdup(abbrev);
+      const char *location = placeIdToAbbrev(validMoves[move]);
       free(validMoves);
-      registerBestPlay(location, "I have outmoved you...");
+      registerBestPlay(location, "I never ran from no one, except from you.");
    } else {
       free(validMoves);
-      registerBestPlay("CD", "I gotta yeet");
+      registerBestPlay("CD", "My castle may be haunted, but I'm not frightened.");
    }
 }
 
