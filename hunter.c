@@ -9,12 +9,60 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 #include "Game.h"
 #include "hunter.h"
 #include "HunterView.h"
+#include "Places.h"
+
+////////////////////////////////////////////////////////////////////////
+
+int randGen(int max);
+void randStartLocation(void);
+void randMove(HunterView hv);
+
+////////////////////////////////////////////////////////////////////////
 
 void decideHunterMove(HunterView hv)
 {
 	// TODO: Replace this with something better!
-	registerBestPlay("TO", "Have we nothing Toulouse?");
+   if (HvGetRound(hv) == 0) {
+      randStartLocation();
+   } else {
+      randMove(hv);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void randStartLocation(void)
+{
+   PlaceId start = NOWHERE;
+   while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
+      start = randGen(NUM_REAL_PLACES);
+   }   
+   const char *abbrev = placeIdToAbbrev(start);
+   char *location = strdup(abbrev);
+   registerBestPlay(location, "Let's crash Dracula's wedding");
+}
+
+void randMove(HunterView hv)
+{
+   int numReturnedLocs = -1;
+   PlaceId *validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
+   
+   int move = randGen(numReturnedLocs);
+   const char *abbrev = placeIdToAbbrev(validLocs[move]);
+   char *location = strdup(abbrev);
+   free(validLocs);
+   registerBestPlay(location, "We're onto your scent");   
+}
+
+int randGen(int max) {
+    srand(time(0));
+    return rand() % max;
 }

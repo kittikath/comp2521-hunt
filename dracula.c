@@ -9,12 +9,65 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 #include "dracula.h"
 #include "DraculaView.h"
 #include "Game.h"
+#include "Places.h"
+
+////////////////////////////////////////////////////////////////////////
+
+int randGen(int max);
+void randStartLocation(void);
+void randMove(DraculaView dv);
+
+////////////////////////////////////////////////////////////////////////
 
 void decideDraculaMove(DraculaView dv)
 {
 	// TODO: Replace this with something better!
-	registerBestPlay("CD", "Mwahahahaha");
+   if (DvGetRound(dv) == 0) {
+      randStartLocation();
+   } else {
+      randMove(dv);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void randStartLocation(void)
+{
+   PlaceId start = NOWHERE;
+   while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
+      start = randGen(NUM_REAL_PLACES);
+   }   
+   const char *abbrev = placeIdToAbbrev(start);
+   char *location = strdup(abbrev);
+   registerBestPlay(location, "Mwahahahaha");
+}
+
+void randMove(DraculaView dv)
+{
+   int numReturnedMoves = -1;
+   PlaceId *validMoves = DvGetValidMoves(dv, &numReturnedMoves);
+   
+   if (numReturnedMoves > 0) {
+      int move = randGen(numReturnedMoves);
+      const char *abbrev = placeIdToAbbrev(validMoves[move]);
+      char *location = strdup(abbrev);
+      free(validMoves);
+      registerBestPlay(location, "I have outmoved you...");
+   } else {
+      free(validMoves);
+      registerBestPlay("CD", "I gotta yeet");
+   }
+}
+
+int randGen(int max) {
+    srand(time(0));
+    return rand() % max;
 }
