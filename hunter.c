@@ -46,7 +46,8 @@ void randStartLocation(void)
       start = randGen(NUM_REAL_PLACES);
    }   
    const char *location = placeIdToAbbrev(start);
-   registerBestPlay(location, "Let's crash Dracula's wedding!");
+   char *play = strdup(location);
+   registerBestPlay(play, "Let's crash Dracula's wedding!");
 }
 
 void randMove(HunterView hv)
@@ -56,8 +57,9 @@ void randMove(HunterView hv)
    
    int move = randGen(numReturnedLocs);
    const char *location = placeIdToAbbrev(validLocs[move]);
+   char *play = strdup(location);
    free(validLocs);
-   registerBestPlay(location, "Don't run, I'm not the sun.");   
+   registerBestPlay(play, "Don't run, I'm not the sun.");   
 }
 
 int randGen(int max) {
