@@ -21,6 +21,7 @@
 #include "utils.h"
 
 #define PROBABILITY_SEA_MOVE 50
+#define PROBABILITY_LAND_MOVE 80
 #define HIDE_DISTANCE 1
 
 ////////////////////////////////////////////////////////////////////////
@@ -31,7 +32,7 @@ static void makeMove(DraculaView dv);
 static int randGen(int max);
 static void registerPlayWithPlaceId(PlaceId move);
 static int indexMax(int *array, int size);
-static bool probability(int chance);
+//static bool probability(int chance);
 static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
                               int numMoves, PlaceId location);
 
@@ -81,28 +82,13 @@ static void makeMove(DraculaView dv)
          dist[i] = closestHunter(dv, locations[i]);
       }
       int index;
-      bool decided = false;
-      // decide best location
-      while (!decided) {
-         index = indexMax(dist, numReturnedLocs);
-         // sea location
-         if (placeIsSea(locations[index]) && probability(PROBABILITY_SEA_MOVE)) {
-            decided = true;
-         } else {
-            dist[index] = 0;
-         }
-         // land location
-         if (placeIsLand(locations[index])) {
-            decided = true;
-         }
-      }
+      index = indexMax(dist, numReturnedLocs);
       // match location with move
       PlaceId move = LocationToMove(dv, validMoves, numReturnedMoves, locations[index]);
       registerPlayWithPlaceId(move);
    } else {
       registerPlayWithPlaceId(CASTLE_DRACULA);
    }
-   
    free(validMoves);
    free(locations);
 }
@@ -111,14 +97,14 @@ static void makeMove(DraculaView dv)
 ////////////////////////////////////////////////////////////////////////
 // Utility Functions
 
-// generates a random integer
+// generates a random integer that's smaller than the input integer
 static int randGen(int max)
 {
     srand(time(0));
     return rand() % max;
 }
 
-// registerBestPlay but using a PlaceId
+// calls registerBestPlay but uses a PlaceId
 static void registerPlayWithPlaceId(PlaceId move)
 {
    const char *location = placeIdToAbbrev(move);
@@ -138,12 +124,14 @@ static int indexMax(int *array, int size)
    return index;
 }
 
+/*
 // calcualtes probability
 static bool probability(int chance)
 {
     srand(time(0));
-    return ((rand() % 100) > chance ? true : false);
+    return ((rand() % 100) < chance ? true : false);
 }
+*/
 
 // matches the location with the move dracula should make
 static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
