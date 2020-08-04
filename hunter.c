@@ -24,6 +24,8 @@
 int randGen(int max);
 void randStartLocation(void);
 void randMove(HunterView hv);
+PlaceId *possibleDraculalocations(HunterView hv, PlaceId draculaLocation, Round r);
+PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r)
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -63,4 +65,15 @@ void randMove(HunterView hv)
 int randGen(int max) {
     srand(time(0));
     return rand() % max;
+}
+
+PlaceId *possibleDraculalocations(HunterView hv, Round round, Round futureRound, PlaceId Known){
+   PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, round);
+   // PlaceId *possiblePlaces = malloc(NUM_REAL_PLACES * sizeof(PlaceId));
+	assert(possiblePlaces != NULL);
+   PlaceId *possiblePlaces = hunterBfs(hv, PLAYER_DRACULA, draculaLocation, futureRound);
+   
+	return possiblePlaces;
+
+
 }
