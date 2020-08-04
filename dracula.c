@@ -18,12 +18,23 @@
 #include "DraculaView.h"
 #include "Game.h"
 #include "Places.h"
+#include "utils.h"
+
+#define PROBABILITY_SEA_MOVE 50
+#define HIDE_DISTANCE 1
 
 ////////////////////////////////////////////////////////////////////////
 
-int randGen(int max);
-void randStartLocation(void);
-void randMove(DraculaView dv);
+static void randStartLocation(DraculaView dv);
+static void makeMove(DraculaView dv);
+
+static int randGen(int max);
+static void registerPlayWithPlaceId(PlaceId move);
+static int indexMax(int *array, int size);
+static bool probability(int chance);
+static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
+                              int numMoves, PlaceId location);
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -31,43 +42,144 @@ void decideDraculaMove(DraculaView dv)
 {
 	// TODO: Replace this with something better!
    if (DvGetRound(dv) == 0) {
-      randStartLocation();
+      randStartLocation(dv);
    } else {
-      randMove(dv);
+      makeMove(dv);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-void randStartLocation(void)
+// generates a land location that is of STARTING_DISTANCE away from hunters
+static void randStartLocation(DraculaView dv)
 {
-   PlaceId start = NOWHERE;
-   while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
-      start = randGen(NUM_REAL_PLACES);
-   }   
-   const char *location = placeIdToAbbrev(start);
-   char *play = strdup(location);
-   registerBestPlay(play, "You're all I've ever wanted, I've wait my whole life to bite the right one...");
+   int dist[NUM_REAL_PLACES];
+   for (int i = 0; i < NUM_REAL_PLACES; i++) {
+      if (placeIsLand(i) && i != HOSPITAL_PLACE) {
+         dist[i] = closestHunter(dv, i);
+      } else {
+         dist[i] = 0;
+      }
+   }
+   PlaceId start = indexMax(dist, NUM_REAL_PLACES);
+   registerPlayWithPlaceId(start);
 }
 
-void randMove(DraculaView dv)
+
+// generates a move to keep dracula away from the hunters
+static void makeMove(DraculaView dv)
 {
    int numReturnedMoves = -1;
    PlaceId *validMoves = DvGetValidMoves(dv, &numReturnedMoves);
+   int numReturnedLocs = -1;
+   PlaceId *locations = DvWhereCanIGo(dv, &numReturnedLocs);
+   int dist[numReturnedLocs];
    
    if (numReturnedMoves > 0) {
-      int move = randGen(numReturnedMoves);
-      const char *location = placeIdToAbbrev(validMoves[move]);
-      char *play = strdup(location);
-      free(validMoves);
-      registerBestPlay(play, "I never ran from no one, except from you.");
+      // generating distances from hunters
+      for (int i = 0; i < numReturnedLocs; i++) {
+         dist[i] = closestHunter(dv, locations[i]);
+      }
+      int index;
+      bool decided = false;
+      // decide best location
+      while (!decided) {
+         index = indexMax(dist, numReturnedLocs);
+         // sea location
+         if (placeIsSea(locations[index]) && probability(PROBABILITY_SEA_MOVE)) {
+            decided = true;
+         } else {
+            dist[index] = 0;
+         }
+         // land location
+         if (placeIsLand(locations[index])) {
+            decided = true;
+         }
+      }
+      // match location with move
+      PlaceId move = LocationToMove(dv, validMoves, numReturnedMoves, locations[index]);
+      registerPlayWithPlaceId(move);
    } else {
-      free(validMoves);
-      registerBestPlay("CD", "My castle may be haunted, but I'm not frightened.");
+      registerPlayWithPlaceId(CASTLE_DRACULA);
    }
+   
+   free(validMoves);
+   free(locations);
 }
 
-int randGen(int max) {
+
+////////////////////////////////////////////////////////////////////////
+// Utility Functions
+
+// generates a random integer
+static int randGen(int max)
+{
     srand(time(0));
     return rand() % max;
+}
+
+// registerBestPlay but using a PlaceId
+static void registerPlayWithPlaceId(PlaceId move)
+{
+   const char *location = placeIdToAbbrev(move);
+   char *play = strdup(location);
+   registerBestPlay(play, "");
+}
+
+// returns the index of the max value in array
+static int indexMax(int *array, int size)
+{
+   int index = 0;
+   for (int i = 1; i < size; i++) {
+      if (array[i] > array[index]) {
+         index = i;
+      }
+   }
+   return index;
+}
+
+// calcualtes probability
+static bool probability(int chance)
+{
+    srand(time(0));
+    return ((rand() % 100) > chance ? true : false);
+}
+
+// matches the location with the move dracula should make
+static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
+                              int numValidMoves, PlaceId location)
+{
+   // location is outside trail
+   if(placesContains(validMoves, numValidMoves, location)) {
+      return location;
+   }
+   PlaceId *trail = draculaTrail(dv);
+   // determine double back move
+   for (int i = 0; i < numValidMoves; i++) {
+      switch(validMoves[i]) {
+         case DOUBLE_BACK_1:
+            if (trail[0] == location) {
+               return DOUBLE_BACK_1;
+            }
+         case DOUBLE_BACK_2:
+            if (trail[1] == location) {
+               return DOUBLE_BACK_2;
+            }
+         case DOUBLE_BACK_3:
+            if (trail[2] == location) {
+               return DOUBLE_BACK_3;
+            }         
+         case DOUBLE_BACK_4:
+            if (trail[3] == location) {
+               return DOUBLE_BACK_4;
+            }         
+         case DOUBLE_BACK_5:
+            if (trail[4] == location) {
+               return DOUBLE_BACK_5;
+            }         
+         default:
+            continue;
+      }
+   }
+   return validMoves[randGen(numValidMoves)];
 }

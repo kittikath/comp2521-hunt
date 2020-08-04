@@ -19,6 +19,7 @@
 #include "GameView.h"
 #include "Map.h"
 // add your own #includes here
+#include "Queue.h"
 #include "utils.h"
 
 struct draculaView {
@@ -36,6 +37,14 @@ PlaceId DvWhereAmI(DraculaView dv);
 
 static void fillTrail(DraculaView dv);
 static bool canMoveTo(DraculaView dv, PlaceId location);
+
+int DvShortestHunterPath(DraculaView dv, Player hunter, PlaceId dest);
+static PlaceId *hunterBfs(DraculaView dv, Player hunter, PlaceId src, Round r);
+
+static Round playerNextRound(DraculaView dv, Player player);
+static int min(int num1, int num2);
+//static int max(int num1, int num2);
+
 
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -353,3 +362,103 @@ PlaceId DvWhereAmI(DraculaView dv)
 {
 	return DvGetPlayerLocation(dv, PLAYER_DRACULA);
 }
+
+int closestHunter(DraculaView dv, PlaceId location)
+{
+   int shortestPath = NUM_REAL_PLACES;
+   for (int hunter = 0; hunter < NUM_PLAYERS - 1; hunter++) {
+      int path = DvShortestHunterPath(dv, hunter, location);
+      shortestPath = min(path, shortestPath);
+   }
+   
+   return shortestPath;
+}
+
+PlaceId *draculaTrail(DraculaView dv)
+{
+   return dv->trailLocations;
+
+}
+
+////////////////////////////////////////////////////////////////////////
+// Utility Functions for closestHunter
+
+int DvShortestHunterPath(DraculaView dv, Player hunter, PlaceId dest)
+{
+	Round r = playerNextRound(dv, hunter);
+	PlaceId src = DvGetPlayerLocation(dv, hunter);
+	PlaceId *pred = hunterBfs(dv, hunter, src, r);
+	
+	// One pass to get the path length
+	int dist = 0;
+	PlaceId curr = dest;
+	while (curr != src) {
+		dist++;
+		curr = pred[curr];
+	}
+	
+	free(pred);
+	return dist;
+}
+
+/**
+ * Performs a BFS for the given hunter starting at `src`, assuming the
+ * round is `r`. Returns a predecessor array.
+ */
+static PlaceId *hunterBfs(DraculaView dv, Player hunter, PlaceId src, Round r) {
+	PlaceId *pred = malloc(NUM_REAL_PLACES * sizeof(PlaceId));
+	placesFill(pred, NUM_REAL_PLACES, -1);
+	pred[src] = src;
+	
+	Queue q1 = QueueNew(); // current round locations
+	Queue q2 = QueueNew(); // next round locations
+	
+	QueueEnqueue(q1, src);
+	while (!(QueueIsEmpty(q1) && QueueIsEmpty(q2))) {
+		PlaceId curr = QueueDequeue(q1);
+		int numReachable = 0;
+		PlaceId *reachable = GvGetReachable(dv->gv, hunter, r, curr,
+		                                    &numReachable);
+		
+		for (int i = 0; i < numReachable; i++) {
+			if (pred[reachable[i]] == -1) {
+				pred[reachable[i]] = curr;
+				QueueEnqueue(q2, reachable[i]);
+			}
+		}
+		free(reachable);
+		
+		// When we've exhausted the current round's locations, advance
+		// to the next round and swap the queues (so the next round's
+		// locations becomes the current round's locations)
+		if (QueueIsEmpty(q1)) {
+			Queue tmp = q1; q1 = q2; q2 = tmp; // swap queues
+			r++;
+		}
+	}
+	
+	QueueDrop(q1);
+	QueueDrop(q2);
+	return pred;
+}
+
+
+/**
+ * Gets the round number of the player's next move
+ */
+static Round playerNextRound(DraculaView dv, Player player) {
+	return DvGetRound(dv) + (player < GvGetPlayer(dv->gv) ? 1 : 0);
+}
+
+/*
+static int max(int num1, int num2) {
+	return (num1 > num2 ? num1 : num2);
+}
+*/
+
+static int min(int num1, int num2) {
+	return (num1 < num2 ? num1 : num2);
+}
+
+////////////////////////////////////////////////////////////////////////
+
