@@ -50,7 +50,7 @@ void decideDraculaMove(DraculaView dv)
 
 ////////////////////////////////////////////////////////////////////////
 
-// generates a land location that is of STARTING_DISTANCE away from hunters
+// starts at a land location that is furthest away from any hunters
 static void randStartLocation(DraculaView dv)
 {
    int dist[NUM_REAL_PLACES];

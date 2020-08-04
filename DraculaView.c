@@ -374,10 +374,10 @@ int closestHunter(DraculaView dv, PlaceId location)
    return shortestPath;
 }
 
+// returns the pointer to dracula's locations
 PlaceId *draculaTrail(DraculaView dv)
 {
    return dv->trailLocations;
-
 }
 
 ////////////////////////////////////////////////////////////////////////
