@@ -37,7 +37,8 @@ struct hunterView {
 static PlaceId *hunterBfs(HunterView hv, Player hunter, PlaceId src,
                           Round r);
 static Round playerNextRound(HunterView hv, Player player);
-static void fillTrail(HunterView dv);
+static void fillTrail(HunterView hv);
+bool trailContains(HunterView hv, PlaceId move);
 
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -269,22 +270,6 @@ static void fillTrail(HunterView hv) {
 }
 
 // checks if trail contains move
-static bool trailContains(HunterView hv, PlaceId move) {
+bool trailContains(HunterView hv, PlaceId move) {
 	return placesContains(hv->trailMoves, hv->trailLength, move);
 }
-
-// checks if trail contains doubleback
-static bool trailContainsDoubleBack(HunterView hv) {
-	for (int i = 0; i < hv->trailLength; i++) {
-		if (isDoubleBack(hv->trailMoves[i])) {
-			return true;
-		}
-	}
-	return false;
-}
-
-// checks if move is doubleback
-static bool isDoubleBack(PlaceId move) {
-	return move >= DOUBLE_BACK_1 && move <= DOUBLE_BACK_5;
-}
-// TODO

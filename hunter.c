@@ -27,6 +27,8 @@ void randMove(HunterView hv);
 PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r);
 void researchMove(HunterView hv);
 static void registerPlayWithPlaceId(PlaceId move);
+void researchMove(HunterView hv);
+void restMove(HunterView hv);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +55,7 @@ void randStartLocation(void)
    registerBestPlay(location, "Let's crash Dracula's wedding!");
 }
 
+// randomly move to a valid location
 void randMove(HunterView hv)
 {
    int numReturnedLocs = -1;
@@ -69,20 +72,20 @@ int randGen(int max) {
     return rand() % max;
 }
 
+
+
 // if dracula trail is all unknown, do research
-// return the hunters current location
 void researchMove(HunterView hv) {
    PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
 
    // if no real location is in dracula's trail, research
-   if (trailContains(NUM_REAL_PLACES) == false) {
+   if (trailContains(hv, NUM_REAL_PLACES) == false) {
       registerPlayWithPlaceId(hunterLocation);
    }
    return;
 }
 
 // if the hunter has >= 3, rest
-// returns the hunters current location
 void restMove(HunterView hv) {
    PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
    int random = randGen(100);
