@@ -24,8 +24,9 @@
 int randGen(int max);
 void randStartLocation(void);
 void randMove(HunterView hv);
-PlaceId *possibleDraculalocations(HunterView hv, PlaceId draculaLocation, Round r);
-PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r)
+PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r);
+void researchMove(HunterView hv);
+static void registerPlayWithPlaceId(PlaceId move);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -34,9 +35,10 @@ void decideHunterMove(HunterView hv)
 	// TODO: Replace this with something better!
    if (HvGetRound(hv) == 0) {
       randStartLocation();
-   } else {
-      randMove(hv);
-   }
+   } 
+   researchMove(hv);
+   restMove(hv);
+   randMove(hv);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -67,13 +69,36 @@ int randGen(int max) {
     return rand() % max;
 }
 
-PlaceId *possibleDraculalocations(HunterView hv, Round round, Round futureRound, PlaceId Known){
-   PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, round);
-   // PlaceId *possiblePlaces = malloc(NUM_REAL_PLACES * sizeof(PlaceId));
-	assert(possiblePlaces != NULL);
-   PlaceId *possiblePlaces = hunterBfs(hv, PLAYER_DRACULA, draculaLocation, futureRound);
-   
-	return possiblePlaces;
+// if dracula trail is all unknown, do research
+// return the hunters current location
+void researchMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
 
+   // if no real location is in dracula's trail, research
+   if (trailContains(NUM_REAL_PLACES) == false) {
+      registerPlayWithPlaceId(hunterLocation);
+   }
+   return;
+}
 
+// if the hunter has >= 3, rest
+// returns the hunters current location
+void restMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+   int random = randGen(100);
+
+   // if player is less than 4 health, rngesus will decide if you want to 
+   // play it safe or yolo
+   if (HvGetHealth(hv, HvGetPlayer(hv)) >= 3 && random > 50) {
+      registerPlayWithPlaceId(hunterLocation);
+   }
+   return;
+}
+
+// calls registerBestPlay but uses a PlaceId
+static void registerPlayWithPlaceId(PlaceId move)
+{
+   const char *location = placeIdToAbbrev(move);
+   char *play = strdup(location);
+   registerBestPlay(play, "");
 }
