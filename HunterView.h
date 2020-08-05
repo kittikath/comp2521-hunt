@@ -216,5 +216,9 @@ PlaceId *HvWhereCanTheyGoByType(HunterView hv, Player player,
 // Your own interface functions
 
 // TODO
+int HvLastTwoKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *roundArr);
+
+PlaceId *draculaBfs(HunterView hv, Player hunter, PlaceId src, Round r);
+
 
 #endif // !defined (FOD__HUNTER_VIEW_H_)

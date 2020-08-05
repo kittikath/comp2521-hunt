@@ -30,9 +30,9 @@ struct hunterView {
 
 static PlaceId *hunterBfs(HunterView hv, Player hunter, PlaceId src,
                           Round r);
+
 static Round playerNextRound(HunterView hv, Player player);
 
-PlaceId *HvLastThreeKnownDraculaLocation(HunterView hv, Round *roundArr);
 
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -112,29 +112,28 @@ PlaceId HvGetLastKnownDraculaLocation(HunterView hv, Round *round)
 	return location;
 }
 
-PlaceId *HvLastThreeKnownDraculaLocation(HunterView hv, Round *roundArr)
+int HvLastTwoKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *roundArr)
 {
-	PlaceId *location = malloc(3*sizeof(PlaceId));
-
 	int numLocs = 0;
-	bool canFree = false;
+	bool canFree = true;
 	PlaceId *locs = GvGetLocationHistory(hv->gv, PLAYER_DRACULA,
 	                                     &numLocs, &canFree);
-	PlaceId location = NOWHERE;
+	placesFill(locations, 3, NOWHERE);
+
 	int counter = 0;
 	for (Round i = numLocs - 1; i >= 0; i--) {
 		if(counter > 2){
 			break;
 		}
 		if (placeIsReal(locs[i])) {
-			location[counter] = locs[i];
+			locations[counter] = locs[i];
 			roundArr[counter] = i;
 			counter++;
 		}
 	}
 	
 	if (canFree) free(locs);
-	return location;
+	return counter;
 }
 
 PlaceId *HvGetShortestPathTo(HunterView hv, Player hunter, PlaceId dest,
@@ -263,3 +262,44 @@ static Round playerNextRound(HunterView hv, Player player) {
 // Your own interface functions
 
 // TODO
+PlaceId *draculaBfs(HunterView hv, Player dracula, PlaceId src, Round round) {
+	Round current = HvGetRound(hv);
+    PlaceId *pred = malloc(NUM_REAL_PLACES * sizeof(PlaceId));
+	placesFill(pred, NUM_REAL_PLACES, -1);
+	pred[src] = src;
+	
+	Queue q1 = QueueNew(); // current round locations
+	Queue q2 = QueueNew(); // next round locations
+
+	QueueEnqueue(q1, src);
+	//stop when round is same as current round 
+	while (!(QueueIsEmpty(q1) && QueueIsEmpty(q2))) {
+		PlaceId curr = QueueDequeue(q1);
+		int numReachable = 0;
+		PlaceId *reachable = GvGetReachableByType(hv->gv, PLAYER_DRACULA, round,
+                              curr, true, false,
+                              false, &numReachable);
+		for (int i = 0; i < numReachable; i++) {
+			if (pred[reachable[i]] == -1) {
+				pred[reachable[i]] = curr;
+				QueueEnqueue(q2, reachable[i]);
+
+			}
+			
+		}
+
+		free(reachable);
+		
+		// When we've exhausted the current round's locations, advance
+		// to the next round and swap the queues (so the next round's
+		// locations becomes the current round's locations)
+		if (QueueIsEmpty(q1) && (round != current+1)) {
+			Queue tmp = q1; q1 = q2; q2 = tmp; // swap queues
+			round++;
+		}
+	}
+	
+	QueueDrop(q1);
+	QueueDrop(q2);
+	return pred;
+}
