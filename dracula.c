@@ -46,13 +46,14 @@ void decideDraculaMove(DraculaView dv)
 	// TODO: Replace this with something better!
    if (DvGetRound(dv) == 0) {
       randStartLocation(dv);
-   } else {
-   	if (DvGetRound(dv) % 13 == 0) {
-      	makeMoveLand(dv);
-      } else {
-      	makeMove(dv);
-      }
-   }
+   } else if (DvGetRound(dv) % 13 == 0) {
+   	makeMoveLand(dv);
+   } else if (DvGetHealth(dv, PLAYER_DRACULA) < 15 && 
+                 placeIsSea(DvGetPlayerLocation(dv, PLAYER_DRACULA))) { 
+      makeMoveLand(dv);
+	} else {
+		makeMove(dv);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////
