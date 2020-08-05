@@ -21,9 +21,12 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-int randGen(int max);
 void randStartLocation(void);
 void randMove(HunterView hv);
+void researchMove(HunterView hv);
+void restMove(HunterView hv);
+static void registerPlayWithPlaceId(PlaceId move);
+int randGen(int max);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +63,38 @@ void randMove(HunterView hv)
    char *play = strdup(location);
    free(validLocs);
    registerBestPlay(play, "Don't run, I'm not the sun.");   
+}
+
+// if dracula trail is all unknown, do research
+void researchMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+
+   // if no real location is in dracula's trail, research
+   if (trailContains(hv, NUM_REAL_PLACES) == false) {
+      registerPlayWithPlaceId(hunterLocation);
+   }
+   return;
+}
+
+// if the hunter has >= 3, rest
+void restMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+   int random = randGen(100);
+
+   // if player is less than 4 health, rngesus will decide if you want to 
+   // play it safe or yolo
+   if (HvGetHealth(hv, HvGetPlayer(hv)) >= 3 && random > 50) {
+      registerPlayWithPlaceId(hunterLocation);
+   }
+   return;
+}
+
+// calls registerBestPlay but uses a PlaceId
+static void registerPlayWithPlaceId(PlaceId move)
+{
+   const char *location = placeIdToAbbrev(move);
+   char *play = strdup(location);
+   registerBestPlay(play, "");
 }
 
 int randGen(int max) {
