@@ -70,10 +70,13 @@ int randGen(int max) {
 PlaceId *possibleDraculalocations(HunterView hv, Round round, Round futureRound, PlaceId Known){
    PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, round);
    // PlaceId *possiblePlaces = malloc(NUM_REAL_PLACES * sizeof(PlaceId));
-	assert(possiblePlaces != NULL);
    PlaceId *possiblePlaces = hunterBfs(hv, PLAYER_DRACULA, draculaLocation, futureRound);
-   
+   assert(possiblePlaces != NULL);
 	return possiblePlaces;
 
+}
 
+PlaceId *crosslocations(HunterView hv, Round round, Round futureRound){
+   possibleDraculalocations(HunterView hv, Round round, Round futureRound, PlaceId Known)
+   hunterBfs(HunterView hv, Player hunter, PlaceId src, Round r);
 }
