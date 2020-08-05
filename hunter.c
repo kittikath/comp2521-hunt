@@ -27,12 +27,15 @@
 #define NUM_LAST_LOC 2
 ////////////////////////////////////////////////////////////////////////
 
-int randGen(int max);
 void randStartLocation(void);
 void randMove(HunterView hv);
 PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r);
 
 PlaceId *possibleDraculalocations(HunterView hv, PlaceId draculaLocation, Round r);
+void researchMove(HunterView hv);
+void restMove(HunterView hv);
+static void registerPlayWithPlaceId(PlaceId move);
+int randGen(int max);
 
 PlaceId *intersectingLocations(HunterView hv, Player hunter, Round round, int *numReturnedLocs);
 static int max(int num1, int num2);
@@ -77,7 +80,8 @@ void randStartLocation(void)
       start = randGen(NUM_REAL_PLACES);
    }   
    const char *location = placeIdToAbbrev(start);
-   registerBestPlay(location, "Let's crash Dracula's wedding!");
+   char *play = strdup(location);
+   registerBestPlay(play, "Let's crash Dracula's wedding!");
 }
 
 void randMove(HunterView hv)
@@ -87,8 +91,41 @@ void randMove(HunterView hv)
    
    int move = randGen(numReturnedLocs);
    const char *location = placeIdToAbbrev(validLocs[move]);
+   char *play = strdup(location);
    free(validLocs);
-   registerBestPlay(location, "Don't run, I'm not the sun.");   
+   registerBestPlay(play, "Don't run, I'm not the sun.");   
+}
+
+// if dracula trail is all unknown, do research
+void researchMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+
+   // if no real location is in dracula's trail, research
+   if (trailContains(hv, NUM_REAL_PLACES) == false) {
+      registerPlayWithPlaceId(hunterLocation);
+   }
+   return;
+}
+
+// if the hunter has >= 3, rest
+void restMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+   int random = randGen(100);
+
+   // if player is less than 4 health, rngesus will decide if you want to 
+   // play it safe or yolo
+   if (HvGetHealth(hv, HvGetPlayer(hv)) >= 3 && random > 50) {
+      registerPlayWithPlaceId(hunterLocation);
+   }
+   return;
+}
+
+// calls registerBestPlay but uses a PlaceId
+static void registerPlayWithPlaceId(PlaceId move)
+{
+   const char *location = placeIdToAbbrev(move);
+   char *play = strdup(location);
+   registerBestPlay(play, "");
 }
 
 int randGen(int max) {
