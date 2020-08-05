@@ -32,9 +32,8 @@ void randMove(HunterView hv);
 PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r);
 
 PlaceId *possibleDraculalocations(HunterView hv, PlaceId draculaLocation, Round r);
-void researchMove(HunterView hv);
-void restMove(HunterView hv);
-static void registerPlayWithPlaceId(PlaceId move);
+// void researchMove(HunterView hv);
+// void restMove(HunterView hv);
 int randGen(int max);
 
 PlaceId *intersectingLocations(HunterView hv, Player hunter, Round round, int *numReturnedLocs);
@@ -54,21 +53,33 @@ void decideHunterMove(HunterView hv)
    int numberofPlaces = 0;
    if (round == 0) {
       randStartLocation();
-   } else if(draculaLocation != NOWHERE){
+   } else if(placeIsReal(draculaLocation)){
+      printf("--------HELLO------------------\n");
       intersections = intersectingLocations(hv, player, round, &numberofPlaces);
-      int val = randGen(numberofPlaces-1);
+      printf("--------------------------\n");
+      for(int i = 0; i < numberofPlaces; i++){
+         printf("%s >", placeIdToName(intersections[i]));
+      }
+      printf("\n");
+      printf("--------------------------\n");
+      int val = randGen(numberofPlaces);
       shortestPath = HvGetShortestPathTo(hv, player, intersections[val], &pathLength);
+      for(int i = 0; i < pathLength; i++){
+         printf("%s >", placeIdToName(shortestPath[i]));
+      }
+      printf("\n");
       if(pathLength == 0){
          randMove(hv);
       }
       else{
+         // registerBestPlay(shortestPath[0], "Don't run, I'm not the sun.");   
          registerPlayWithPlaceId(shortestPath[0]);
       }
-      
+      free(intersections);
+      free(shortestPath);
    } else{
       randMove(hv);
    }
-   free(intersections);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -97,15 +108,15 @@ void randMove(HunterView hv)
 }
 
 // if dracula trail is all unknown, do research
-void researchMove(HunterView hv) {
-   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+// void researchMove(HunterView hv) {
+//    PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
 
-   // if no real location is in dracula's trail, research
-   if (trailContains(hv, NUM_REAL_PLACES) == false) {
-      registerPlayWithPlaceId(hunterLocation);
-   }
-   return;
-}
+//    // if no real location is in dracula's trail, research
+//    if (trailContains(hv, NUM_REAL_PLACES) == false) {
+//       registerPlayWithPlaceId(hunterLocation);
+//    }
+//    return;
+// }
 
 // if the hunter has >= 3, rest
 void restMove(HunterView hv) {
@@ -118,14 +129,6 @@ void restMove(HunterView hv) {
       registerPlayWithPlaceId(hunterLocation);
    }
    return;
-}
-
-// calls registerBestPlay but uses a PlaceId
-static void registerPlayWithPlaceId(PlaceId move)
-{
-   const char *location = placeIdToAbbrev(move);
-   char *play = strdup(location);
-   registerBestPlay(play, "");
 }
 
 int randGen(int max) {
@@ -148,6 +151,7 @@ PlaceId *intersectingLocations(HunterView hv, Player hunter, Round round, int *n
    int knownLocations = HvLastTwoKnownDraculaLocation(hv, location, roundArr);
    PlaceId *bfs1;
    PlaceId *bfs2;
+   printf("last 2 locations!!!! %s %s\n", placeIdToName(location[0]), placeIdToName(location[1]));
    if (knownLocations > 0) {
       bfs1 = possibleDraculalocations(hv, location[0], roundArr[0]);
    }
@@ -205,5 +209,5 @@ static void registerPlayWithPlaceId(PlaceId move)
 {
    const char *location = placeIdToAbbrev(move);
    char *play = strdup(location);
-   registerBestPlay(play, "");
+   registerBestPlay(play, "please work :(");
 }

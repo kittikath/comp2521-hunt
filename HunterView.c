@@ -38,8 +38,8 @@ static PlaceId *hunterBfs(HunterView hv, Player hunter, PlaceId src,
                           Round r);
 
 static Round playerNextRound(HunterView hv, Player player);
-static void fillTrail(HunterView hv);
-bool trailContains(HunterView hv, PlaceId move);
+// static void fillTrail(HunterView hv);
+// bool trailContains(HunterView hv, PlaceId move);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ HunterView HvNew(char *pastPlays, Message messages[])
 	
 	hv->gv = GvNew(pastPlays, messages);
 	hv->map = MapNew();
-	fillTrail(hv);
+	// fillTrail(hv);
 	return hv;
 }
 
@@ -279,10 +279,10 @@ PlaceId *draculaBfs(HunterView hv, Player dracula, PlaceId src, Round round) {
 	
 	Queue q1 = QueueNew(); // current round locations
 	Queue q2 = QueueNew(); // next round locations
-
+	int flag = 0;
 	QueueEnqueue(q1, src);
 	//stop when round is same as current round 
-	while (!(QueueIsEmpty(q1) && QueueIsEmpty(q2))) {
+	while (!(QueueIsEmpty(q1) && QueueIsEmpty(q2)) || flag == 1) {
 		PlaceId curr = QueueDequeue(q1);
 		int numReachable = 0;
 		PlaceId *reachable = GvGetReachableByType(hv->gv, PLAYER_DRACULA, round,
@@ -302,41 +302,49 @@ PlaceId *draculaBfs(HunterView hv, Player dracula, PlaceId src, Round round) {
 		// When we've exhausted the current round's locations, advance
 		// to the next round and swap the queues (so the next round's
 		// locations becomes the current round's locations)
-		if (QueueIsEmpty(q1) && (round != current+1)) {
+		printf("round %d!!!!! current %d!!!!!!\n", round, current);
+		if (QueueIsEmpty(q1) && round != current+1) {
 			Queue tmp = q1; q1 = q2; q2 = tmp; // swap queues
 			round++;
+		}
+		if(round == current+1){
+			flag = 1;
 		}
 	}
 	
 	QueueDrop(q1);
 	QueueDrop(q2);
 	return pred;
-// fills the last 6 locations of dracula
-static void fillTrail(HunterView hv) {
-	int numMoves = TRAIL_SIZE - 1;
-	int numLocations = TRAIL_SIZE - 1;
-	
-	bool canFreeMoves = false;
-	bool canFreeLocations = false;
-	
-	PlaceId *moves = GvGetLastMoves(hv->gv, PLAYER_DRACULA, numMoves,
-	                                &numMoves, &canFreeMoves);
-	
-	PlaceId *locations = GvGetLastLocations(hv->gv, PLAYER_DRACULA, numLocations,
-	                                        &numLocations, &canFreeLocations);
-	
-	placesCopy(hv->trailMoves, moves, numMoves);
-	placesCopy(hv->trailLocations, locations, numLocations);
-	
-	placesReverse(hv->trailMoves, numMoves);
-	placesReverse(hv->trailLocations, numLocations);
-	
-	hv->trailLength = numMoves;
-	if (canFreeMoves) free(moves);
-	if (canFreeLocations) free(locations);
 }
 
-// checks if trail contains move
-bool trailContains(HunterView hv, PlaceId move) {
-	return placesContains(hv->trailMoves, hv->trailLength, move);
-}
+// fills the last 6 locations of dracula
+
+
+// static void fillTrail(HunterView hv) {
+// 	int numMoves = TRAIL_SIZE - 1;
+// 	int numLocations = TRAIL_SIZE - 1;
+	
+// 	bool canFreeMoves = false;
+// 	bool canFreeLocations = false;
+	
+// 	PlaceId *moves = GvGetLastMoves(hv->gv, PLAYER_DRACULA, numMoves,
+// 	                                &numMoves, &canFreeMoves);
+	
+// 	PlaceId *locations = GvGetLastLocations(hv->gv, PLAYER_DRACULA, numLocations,
+// 	                                        &numLocations, &canFreeLocations);
+	
+// 	placesCopy(hv->trailMoves, moves, numMoves);
+// 	placesCopy(hv->trailLocations, locations, numLocations);
+	
+// 	placesReverse(hv->trailMoves, numMoves);
+// 	placesReverse(hv->trailLocations, numLocations);
+	
+// 	hv->trailLength = numMoves;
+// 	if (canFreeMoves) free(moves);
+// 	if (canFreeLocations) free(locations);
+// }
+
+// // checks if trail contains move
+// bool trailContains(HunterView hv, PlaceId move) {
+// 	return placesContains(hv->trailMoves, hv->trailLength, move);
+// }
