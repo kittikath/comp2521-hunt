@@ -35,10 +35,13 @@ void decideHunterMove(HunterView hv)
 {
 	// TODO: Replace this with something better!
    if (HvGetRound(hv) == 0) {
-      randStartLocation();
-   } else {
-      randMove(hv);
-   }
+      randStartLocation(hv);
+   } 
+   campAtCastleDracula(hv);
+   //normalMove(hv);
+   researchMove(hv);
+   restMove(hv);
+   randMove(hv);
 }
 
 ////////////////////////////////////////////////////////////////////////
