@@ -32,9 +32,15 @@ PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r)
 void decideHunterMove(HunterView hv)
 {
 	// TODO: Replace this with something better!
-   if (HvGetRound(hv) == 0) {
+   int round = HvGetRound(hv);
+   PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, round);
+
+   if (round == 0) {
       randStartLocation();
-   } else {
+   } else if(draculaLocation != NOWHERE){
+
+   }
+   } else{
       randMove(hv);
    }
 }
@@ -68,7 +74,6 @@ int randGen(int max) {
 }
 
 PlaceId *possibleDraculalocations(HunterView hv, Round round, Round futureRound, PlaceId Known){
-   PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, round);
    // PlaceId *possiblePlaces = malloc(NUM_REAL_PLACES * sizeof(PlaceId));
    PlaceId *possiblePlaces = hunterBfs(hv, PLAYER_DRACULA, draculaLocation, futureRound);
    assert(possiblePlaces != NULL);
@@ -76,7 +81,8 @@ PlaceId *possibleDraculalocations(HunterView hv, Round round, Round futureRound,
 
 }
 
-PlaceId *crosslocations(HunterView hv, Round round, Round futureRound){
-   possibleDraculalocations(HunterView hv, Round round, Round futureRound, PlaceId Known)
-   hunterBfs(HunterView hv, Player hunter, PlaceId src, Round r);
+PlaceId *crosslocations(HunterView hv, Player hunter, Round round, Round futureRound){
+   PlaceId *draculaLocs = possibleDraculalocations(hv, round, futureRound, Known)
+   PlaceId *hunterLocs = hunterBfs(hv, hunter, src, round);
+   PlaceId *overlap = 
 }

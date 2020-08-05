@@ -32,6 +32,8 @@ static PlaceId *hunterBfs(HunterView hv, Player hunter, PlaceId src,
                           Round r);
 static Round playerNextRound(HunterView hv, Player player);
 
+PlaceId *HvLastThreeKnownDraculaLocation(HunterView hv, Round *roundArr);
+
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
 
@@ -103,6 +105,31 @@ PlaceId HvGetLastKnownDraculaLocation(HunterView hv, Round *round)
 			location = locs[i];
 			*round = i;
 			break;
+		}
+	}
+	
+	if (canFree) free(locs);
+	return location;
+}
+
+PlaceId *HvLastThreeKnownDraculaLocation(HunterView hv, Round *roundArr)
+{
+	PlaceId *location = malloc(3*sizeof(PlaceId));
+
+	int numLocs = 0;
+	bool canFree = false;
+	PlaceId *locs = GvGetLocationHistory(hv->gv, PLAYER_DRACULA,
+	                                     &numLocs, &canFree);
+	PlaceId location = NOWHERE;
+	int counter = 0;
+	for (Round i = numLocs - 1; i >= 0; i--) {
+		if(counter > 2){
+			break;
+		}
+		if (placeIsReal(locs[i])) {
+			location[counter] = locs[i];
+			roundArr[counter] = i;
+			counter++;
 		}
 	}
 	
