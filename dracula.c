@@ -28,10 +28,12 @@
 
 static void randStartLocation(DraculaView dv);
 static void makeMove(DraculaView dv);
+static void makeMoveLand(DraculaView dv);
 
 static int randGen(int max);
 static void registerPlayWithPlaceId(PlaceId move);
 static int indexMax(int *array, int size);
+static int indexMaxLand(int *array, int size);
 //static bool probability(int chance);
 static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
                               int numMoves, PlaceId location);
@@ -45,7 +47,11 @@ void decideDraculaMove(DraculaView dv)
    if (DvGetRound(dv) == 0) {
       randStartLocation(dv);
    } else {
-      makeMove(dv);
+   	if (DvGetRound(dv) % 13 == 0) {
+      	makeMoveLand(dv);
+      } else {
+      	makeMove(dv);
+      }
    }
 }
 
@@ -93,6 +99,33 @@ static void makeMove(DraculaView dv)
    free(locations);
 }
 
+static void makeMoveLand(DraculaView dv)
+{
+   int numReturnedMoves = -1;
+   PlaceId *validMoves = DvGetValidMoves(dv, &numReturnedMoves);
+   int numReturnedLocs = -1;
+   PlaceId *locations = DvWhereCanIGo(dv, &numReturnedLocs);
+   int dist[numReturnedLocs];
+   
+   if (numReturnedMoves > 0) {
+      // generating distances from hunters
+      for (int i = 0; i < numReturnedLocs; i++) {
+         dist[i] = closestHunter(dv, locations[i]);
+      }
+      int index;
+      index = indexMaxLand(dist, numReturnedLocs);
+      // match location with move
+      PlaceId move = LocationToMove(dv, validMoves, numReturnedMoves, locations[index]);
+      registerPlayWithPlaceId(move);
+   } else {
+      registerPlayWithPlaceId(CASTLE_DRACULA);
+   }
+   free(validMoves);
+   free(locations);
+}
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -118,6 +151,17 @@ static int indexMax(int *array, int size)
    int index = 0;
    for (int i = 1; i < size; i++) {
       if (array[i] > array[index]) {
+         index = i;
+      }
+   }
+   return index;
+}
+
+static int indexMaxLand(int *array, int size)
+{
+   int index = 0;
+   for (int i = 1; i < size; i++) {
+      if (array[i] > array[index] && placeIsLand(array[i])) {
          index = i;
       }
    }
