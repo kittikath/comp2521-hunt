@@ -216,6 +216,6 @@ PlaceId *HvWhereCanTheyGoByType(HunterView hv, Player player,
 // Your own interface functions
 bool trailContains(HunterView hv, PlaceId move);
 // TODO
-int HvLastThreeKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *roundArr);
+//int HvLastThreeKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *roundArr);
 
 #endif // !defined (FOD__HUNTER_VIEW_H_)
