@@ -39,9 +39,12 @@ void decideHunterMove(HunterView hv)
       randStartLocation(hv);
       return;
    } 
+   if (HvGetRound(hv)%6 == 0) {
+      researchMove(hv);
+      return;
+   }
    randMove(hv);
    normalMove(hv);
-   //researchMove(hv);
    restMove(hv);
 }
 
@@ -121,10 +124,7 @@ void randMove(HunterView hv)
 void researchMove(HunterView hv) {
    PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
 
-   // if no real location is in dracula's trail, research
-   if (trailContains(hv, NUM_REAL_PLACES) == false) {
-      registerPlayWithPlaceId(hunterLocation);
-   }
+   registerPlayWithPlaceId(hunterLocation);
    return;
 }
 
