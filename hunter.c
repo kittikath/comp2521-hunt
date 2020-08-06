@@ -22,6 +22,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 void randStartLocation(HunterView hv);
+void normalMove(HunterView hv);
 void randMove(HunterView hv);
 void researchMove(HunterView hv);
 void restMove(HunterView hv);
@@ -33,30 +34,14 @@ int randGen(HunterView hv, int max);
 void decideHunterMove(HunterView hv)
 {
 	// TODO: Replace this with something better!
-   int round = HvGetRound(hv);
-   int player = HvGetPlayer(hv);
-   PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, &round);
-   PlaceId *shortestPath;
-   PlaceId *validLocs;
-   int pathLength = 0;
-   int numReturnedLocs = -1;
-   if (round == 0) {
+   if (HvGetRound(hv) == 0) {
       randStartLocation(hv);
+      return;
    } 
-   else if (placeIsReal(draculaLocation)) {
-      shortestPath = HvGetShortestPathTo(hv, player, draculaLocation, &pathLength);
-      validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
-      for (int j = 0; j < numReturnedLocs; j++){
-         if(shortestPath[0] == validLocs[j]){
-            registerPlayWithPlaceId(shortestPath[0]);
-            break;
-         }
-      }
-   }
-   //normalMove(hv);
+   randMove(hv);
+   normalMove(hv);
    researchMove(hv);
    restMove(hv);
-   randMove(hv);
 }
 
 /*
@@ -79,6 +64,30 @@ void normalMove(HunterView hv) {
 }
 */
 ////////////////////////////////////////////////////////////////////////
+
+void normalMove(HunterView hv) {
+   int round = HvGetRound(hv);
+   int player = HvGetPlayer(hv);
+   PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, &round);
+   PlaceId *shortestPath;
+   PlaceId *validLocs;
+   int pathLength = 0;
+   int numReturnedLocs = -1;
+
+   if (placeIsReal(draculaLocation)) {
+      shortestPath = HvGetShortestPathTo(hv, player, draculaLocation, &pathLength);
+      validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
+      for (int i = 0; i < numReturnedLocs; i++){
+         if(shortestPath[0] == validLocs[i]){
+            registerPlayWithPlaceId(shortestPath[0]);
+            break;
+         }
+      }
+   }
+   else {
+      return;
+   }
+}
 
 void randStartLocation(HunterView hv)
 {
@@ -121,7 +130,7 @@ void restMove(HunterView hv) {
 
    // if player is less than 4 health, rngesus will decide if you want to 
    // play it safe or yolo
-   if (HvGetHealth(hv, HvGetPlayer(hv)) >= 3 && random > 20) {
+   if (HvGetHealth(hv, HvGetPlayer(hv)) <= 3 && random > 20) {
       registerPlayWithPlaceId(hunterLocation);
    }
    return;
