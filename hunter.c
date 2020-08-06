@@ -19,6 +19,7 @@
 #include "HunterView.h"
 #include "Places.h"
 
+#define NUM_LAST_LOC 3
 ////////////////////////////////////////////////////////////////////////
 
 void randStartLocation(HunterView hv);
@@ -40,7 +41,7 @@ void decideHunterMove(HunterView hv)
    } 
    randMove(hv);
    normalMove(hv);
-   researchMove(hv);
+   //researchMove(hv);
    restMove(hv);
 }
 
@@ -73,9 +74,13 @@ void normalMove(HunterView hv) {
    PlaceId *validLocs;
    int pathLength = 0;
    int numReturnedLocs = -1;
+   Round rounds[NUM_LAST_LOC];
+   PlaceId draculaHistory[NUM_LAST_LOC];
 
    if (placeIsReal(draculaLocation)) {
-      shortestPath = HvGetShortestPathTo(hv, player, draculaLocation, &pathLength);
+      int knownLocations = HvLastThreeKnownDraculaLocation(hv, draculaHistory, rounds);
+      int val = randGen(hv, knownLocations);
+      shortestPath = HvGetShortestPathTo(hv, player, draculaHistory[val], &pathLength);
       validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
       for (int i = 0; i < numReturnedLocs; i++){
          if(shortestPath[0] == validLocs[i]){

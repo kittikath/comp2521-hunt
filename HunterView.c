@@ -119,6 +119,30 @@ PlaceId HvGetLastKnownDraculaLocation(HunterView hv, Round *round)
 	return location;
 }
 
+int HvLastThreeKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *roundArr)
+{
+	int numLocs = 0;
+	bool canFree = true;
+	PlaceId *locs = GvGetLocationHistory(hv->gv, PLAYER_DRACULA,
+	                                     &numLocs, &canFree);
+	placesFill(locations, 3, NOWHERE);
+
+	int counter = 0;
+	for (Round i = numLocs - 1; i >= 0; i--) {
+		if(counter > 2){
+			break;
+		}
+		if (placeIsReal(locs[i])) {
+			locations[counter] = locs[i];
+			roundArr[counter] = i;
+			counter++;
+		}
+	}
+	
+	if (canFree) free(locs);
+	return counter;
+}
+
 PlaceId *HvGetShortestPathTo(HunterView hv, Player hunter, PlaceId dest,
                              int *pathLength)
 {
