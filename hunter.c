@@ -27,7 +27,8 @@
 #define NUM_LAST_LOC 2
 ////////////////////////////////////////////////////////////////////////
 
-void randStartLocation(void);
+void randStartLocation(HunterView hv);
+void campAtCastleDracula(HunterView hv);
 void randMove(HunterView hv);
 PlaceId *hunterBfs(HunterView hv, Player player, PlaceId src, Round r);
 
@@ -80,12 +81,27 @@ void decideHunterMove(HunterView hv)
    } else{
       randMove(hv);
    }
+   // if (HvGetRound(hv) == 0) {
+   //    randStartLocation(hv);
+   // } 
+   campAtCastleDracula(hv);
+   //normalMove(hv);
+   researchMove(hv);
+   restMove(hv);
+   randMove(hv);
 }
 
 ////////////////////////////////////////////////////////////////////////
 
-void randStartLocation(void)
+void randStartLocation(HunterView hv)
 {
+///////////////// CHEESE /////////////////
+   // lord godalming will be our unwelcome freeloader at castle dracula
+   if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
+      registerPlayWithPlaceId(CASTLE_DRACULA);
+      return;
+   }
+//////////////////////////////////////////
    PlaceId start = NOWHERE;
    while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
       start = randGen(NUM_REAL_PLACES);
@@ -94,6 +110,14 @@ void randStartLocation(void)
    char *play = strdup(location);
    registerBestPlay(play, "Let's crash Dracula's wedding!");
 }
+
+///////////////// CHEESE /////////////////
+void campAtCastleDracula(HunterView hv) {
+   if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
+      registerPlayWithPlaceId(CASTLE_DRACULA);
+   }
+}
+//////////////////////////////////////////
 
 void randMove(HunterView hv)
 {
@@ -125,7 +149,7 @@ void restMove(HunterView hv) {
 
    // if player is less than 4 health, rngesus will decide if you want to 
    // play it safe or yolo
-   if (HvGetHealth(hv, HvGetPlayer(hv)) >= 3 && random > 50) {
+   if (HvGetHealth(hv, HvGetPlayer(hv)) >= 3 && random > 20) {
       registerPlayWithPlaceId(hunterLocation);
    }
    return;
