@@ -132,18 +132,19 @@ void decideDraculaMove(DraculaView dv)
          // index of best special land move
          indexLand = indexMaxLand(distancesSpecial, locations, numReturnedLocs);
          
-         // make sea move if available and needed
-         if (seaAvailable && distancesSpecial[indexLand] <= MAKE_SEA_MOVE) {
-            PlaceId moveSea = locationToMove(dv, validMoves, numReturnedMoves,
-                                                           locations[indexSea]);
-            registerPlayWithPlaceId(moveSea);
-         }
          // making special land move
          if (landAvailable && distancesSpecial[indexLand] >= MAKE_LAND_MOVE) {      
             PlaceId moveLand = locationToMove(dv, validMoves, numReturnedMoves,
                                                           locations[indexLand]);
             registerPlayWithPlaceId(moveLand);
          }
+         // make sea move if available and needed
+         if (seaAvailable && distancesSpecial[indexLand] <= MAKE_SEA_MOVE) {
+            PlaceId moveSea = locationToMove(dv, validMoves, numReturnedMoves,
+                                                           locations[indexSea]);
+            registerPlayWithPlaceId(moveSea);
+         }
+
       }   
    }
    
@@ -308,7 +309,7 @@ static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
       return location;
    }
    PlaceId *trail = draculaTrail(dv);
-   // determine double back move
+   // determine double back or hide move
    for (int i = 0; i < numValidMoves; i++) {
       switch(validMoves[i]) {
          case HIDE:
