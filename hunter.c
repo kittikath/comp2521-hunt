@@ -27,7 +27,7 @@ void normalMove(HunterView hv);
 void randMove(HunterView hv);
 void researchMove(HunterView hv);
 void restMove(HunterView hv);
-static void registerPlayWithPlaceId(PlaceId move);
+static void registerPlayWithPlaceId(PlaceId move, Message Message);
 int randGen(HunterView hv, int max);
 PlaceId prevLocation(HunterView hv);
 void randMoveWithNoCongaLine(HunterView hv);
@@ -41,15 +41,12 @@ void decideHunterMove(HunterView hv)
       randStartLocation(hv);
       return;
    } 
-   // if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
-   //    registerPlayWithPlaceId(CASTLE_DRACULA);
-   //    return;
-   // }
    if (HvGetRound(hv)%6 == 0) {
       researchMove(hv);
       return;
    }
-   randMove(hv);
+   // randMove(hv);
+   randMoveWithNoCongaLine(hv);
    normalMove(hv);
    restMove(hv);
 }
@@ -94,7 +91,7 @@ void normalMove(HunterView hv) {
       validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
       for (int i = 0; i < numReturnedLocs; i++){
          if(shortestPath[0] == validLocs[i]){
-            registerPlayWithPlaceId(shortestPath[0]);
+            registerPlayWithPlaceId(shortestPath[0], "normal move");
             break;
          }
       }
@@ -109,19 +106,19 @@ void randStartLocation(HunterView hv)
    PlaceId start = NOWHERE;
    // CHEESE
    if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
-      registerPlayWithPlaceId(CONSTANTA);
+      registerPlayWithPlaceId(CONSTANTA, "start location");
       return;
    }
    else if(HvGetPlayer(hv) == PLAYER_DR_SEWARD) {
-      registerPlayWithPlaceId(LISBON);
+      registerPlayWithPlaceId(LISBON, "start location");
       return;
    }
    else if(HvGetPlayer(hv) == PLAYER_MINA_HARKER) {
-      registerPlayWithPlaceId(LIVERPOOL);
+      registerPlayWithPlaceId(LIVERPOOL, "start location");
       return;
    }
    else if(HvGetPlayer(hv) == PLAYER_VAN_HELSING) {
-      registerPlayWithPlaceId(NAPLES);
+      registerPlayWithPlaceId(NAPLES, "start location");
       return;
    }
    while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
@@ -129,7 +126,7 @@ void randStartLocation(HunterView hv)
    }   
    const char *location = placeIdToAbbrev(start);
    char *play = strdup(location);
-   registerBestPlay(play, "");
+   registerBestPlay(play, "start location");
 }
 
 void randMove(HunterView hv)
@@ -148,7 +145,7 @@ void randMove(HunterView hv)
 void researchMove(HunterView hv) {
    PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
 
-   registerPlayWithPlaceId(hunterLocation);
+   registerPlayWithPlaceId(hunterLocation, "research");
    return;
 }
 
@@ -160,17 +157,17 @@ void restMove(HunterView hv) {
    // if player is less than 4 health, rngesus will decide if you want to 
    // play it safe or yolo
    if (HvGetHealth(hv, HvGetPlayer(hv)) <= 3 && random > 20) {
-      registerPlayWithPlaceId(hunterLocation);
+      registerPlayWithPlaceId(hunterLocation, "rest move");
    }
    return;
 }
 
 // calls registerBestPlay but uses a PlaceId
-static void registerPlayWithPlaceId(PlaceId move)
+static void registerPlayWithPlaceId(PlaceId move, Message message)
 {
    const char *location = placeIdToAbbrev(move);
    char *play = strdup(location);
-   registerBestPlay(play, "");
+   registerBestPlay(play, message);
 }
 
 int randGen(HunterView hv, int max) {
@@ -192,13 +189,9 @@ void randMoveWithNoCongaLine(HunterView hv)
    const char *location = placeIdToAbbrev(validLocs[move]);
    char *play = strdup(location);
    for (int i = 0; i < 4; i++) {
-      // if i is current player, skip check
-      if (i == HvGetPlayer(hv)) {
-         break;
-      }
       // if the most recent location of a hunter is this hunter's current play, change
       PlaceId lastLoc = lastLocation(hv, i);
-      if (lastLoc == validLocs[move]) {
+      if (lastLoc == validLocs[move] && i != HvGetPlayer(hv)) {
          // loop through all possible plays
          for (int j = 0; j < numReturnedLocs; j++) {
             const char *locationcpy = placeIdToAbbrev(validLocs[j]);
@@ -206,7 +199,7 @@ void randMoveWithNoCongaLine(HunterView hv)
             if (location != locationcpy) {
                play = strdup(locationcpy);
                free(validLocs);
-               registerBestPlay(play, "");
+               registerBestPlay(play, "random congo line");
                return;
             }
          }
