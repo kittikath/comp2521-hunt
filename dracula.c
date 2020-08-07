@@ -20,22 +20,26 @@
 #include "Places.h"
 #include "utils.h"
 
-#define PROBABILITY_SEA_MOVE 50
-#define PROBABILITY_LAND_MOVE 80
-#define HIDE_DISTANCE 1
+// james' special numbers, don't touch
+#define MAKE_SPECIAL_MOVE 1
+#define MAKE_SEA_MOVE 1
+#define MAKE_LAND_MOVE 2
+#define MAKE_HIDE_MOVE 1
+#define HUNTER_NEAR_PORT 1 // LEAVE THIS AS 1!
+#define SPECIAL_SEA_MOVE 2
+
 
 ////////////////////////////////////////////////////////////////////////
 
-static void randStartLocation(DraculaView dv);
-static void makeMove(DraculaView dv);
-static void makeMoveLand(DraculaView dv);
+static void registerStartLocation(DraculaView dv);
 
 static int randGen(int max);
 static void registerPlayWithPlaceId(PlaceId move);
 static int indexMax(int *array, int size);
-static int indexMaxLand(int *array, int size);
+static int indexMaxLand(int *distances, PlaceId* locations, int size);
+static int indexMaxSea(int *distances, PlaceId* locations, int size);
 //static bool probability(int chance);
-static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
+static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
                               int numMoves, PlaceId location);
 
 
@@ -44,88 +48,171 @@ static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
 void decideDraculaMove(DraculaView dv)
 {
 	// TODO: Replace this with something better!
-   if (DvGetRound(dv) == 0) {
-      randStartLocation(dv);
-   } else {
-   	if (DvGetRound(dv) % 13 == 0) {
-      	makeMoveLand(dv);
+	
+	int currentRound = DvGetRound(dv);
+   int currentBlood = DvGetHealth(dv, PLAYER_DRACULA);
+	PlaceId currentLocation = DvGetPlayerLocation(dv, PLAYER_DRACULA);	
+	
+	// start round
+   if (currentRound == 0) {
+      registerStartLocation(dv);
+      return;
+   }
+   
+   int numReturnedMoves = -1;
+   PlaceId *validMoves = DvGetValidMoves(dv, &numReturnedMoves);
+   int numReturnedLocs = -1;
+   PlaceId *locations = DvWhereCanIGo(dv, &numReturnedLocs);
+   
+   if (numReturnedMoves == 0) {
+      registerPlayWithPlaceId(CASTLE_DRACULA);
+      free(validMoves);
+      free(locations);
+      return;
+   }
+   
+   // register a random move incase of time
+   registerPlayWithPlaceId(validMoves[(currentBlood + currentRound) %
+                                                             numReturnedMoves]);
+                                                                                      
+   int distancesNormal[numReturnedMoves];
+   int distancesSpecial[numReturnedLocs];
+   bool hideAvailable = false;
+   bool landAvailable = false;
+   bool seaAvailable = false;
+   int indexSea;                                                          
+   
+   // generate distances from hunters
+   for (int i = 0; i < numReturnedMoves; i++) {
+      if (placeIsLand(validMoves[i])) {         
+         distancesNormal[i] = closestHunter(dv, validMoves[i]);
+         landAvailable = true;
+      } else if (placeIsSea(validMoves[i])) {
+         distancesNormal[i] = -1 * closestHunter(dv, validMoves[i]);
+         seaAvailable = true;
+         indexSea = i;
       } else {
-      	makeMove(dv);
+         if (validMoves[i] == HIDE) {
+            hideAvailable = true;
+         }
+         distancesNormal[i] = 0;
       }
    }
+   
+
+   
+   // index of the best normal land move
+   int indexLand = indexMaxLand(distancesNormal, validMoves, numReturnedMoves);
+   
+   /*
+   if (landAvailable) {
+      printf("Land IS Available\n");
+      printf("NUMBER: %d, LOCATION: %s\n", distancesNormal[indexLand], placeIdToAbbrev(validMoves[indexLand]));
+   } */  
+   
+   // dracula at land
+   if (placeIsLand(currentLocation)) {
+      // making a normal move
+      if (landAvailable) {
+         registerPlayWithPlaceId(validMoves[indexLand]);
+      }
+      // extra consideration to make a special move if required
+      if (!landAvailable || distancesNormal[indexLand] <= MAKE_SPECIAL_MOVE) {                    
+         // generating distances from hunters
+         for (int i = 0; i < numReturnedLocs; i++) {
+            if (placeIsLand(locations[i])) {
+               distancesSpecial[i] = closestHunter(dv, locations[i]);
+               landAvailable = true;
+            // sea is a very special place
+            } else if (placeIsSea(locations[i])) {
+               distancesSpecial[i] = 0;
+               seaAvailable = true;
+               indexSea = i;
+            } else {
+               distancesSpecial[i] = 0;
+            }
+         }
+         // index of best special land move
+         indexLand = indexMaxLand(distancesSpecial, locations, numReturnedLocs);
+  
+         // make sea move if available and needed
+         if (seaAvailable && distancesSpecial[indexLand] <= MAKE_SEA_MOVE) {
+            PlaceId moveSea = locationToMove(dv, validMoves, numReturnedMoves,
+                                                           locations[indexSea]);
+            registerPlayWithPlaceId(moveSea);
+         }
+         // making special land move
+         if (landAvailable && distancesSpecial[indexLand] >= MAKE_LAND_MOVE) {      
+            PlaceId moveLand = locationToMove(dv, validMoves, numReturnedMoves,
+                                                          locations[indexLand]);
+            registerPlayWithPlaceId(moveLand);
+         }         
+         // make hide move if available and needed
+         if (hideAvailable && distancesSpecial[indexLand] <= MAKE_HIDE_MOVE) {
+            registerPlayWithPlaceId(HIDE);
+         }
+      }   
+   }
+   
+   // dracula at sea
+   if (placeIsSea(currentLocation)) {
+      // make move to land
+      if (landAvailable && distancesNormal[indexLand] > HUNTER_NEAR_PORT) {
+         registerPlayWithPlaceId(validMoves[indexLand]);
+      // otherwise, make another normal sea move
+      } else if (seaAvailable) {
+         registerPlayWithPlaceId(validMoves[indexSea]);
+      // otherwise, consider to make a special move in the sea
+      } else {
+         // generating distances from hunters
+         for (int i = 0; i < numReturnedLocs; i++) {
+            if (placeIsLand(locations[i])) {
+               distancesSpecial[i] = closestHunter(dv, locations[i]);
+               landAvailable = true;
+            // sea is a very special place
+            } else if (placeIsSea(locations[i])) {
+               distancesSpecial[i] = -1 * closestHunter(dv, locations[i]);
+               seaAvailable = true;
+            } else {
+               distancesSpecial[i] = 0;
+            }
+         }
+         indexLand = indexMaxLand(distancesSpecial, locations, numReturnedLocs);
+         indexSea = indexMaxSea(distancesSpecial, locations, numReturnedLocs);
+         // make special move to land
+         if (landAvailable && distancesSpecial[indexLand] > HUNTER_NEAR_PORT) {      
+            PlaceId moveLand = locationToMove(dv, validMoves, numReturnedMoves,
+                                                          locations[indexLand]);
+            registerPlayWithPlaceId(moveLand);
+         // if no good land moves available, stay at sea
+         } else if (seaAvailable) {
+            PlaceId moveSea = locationToMove(dv, validMoves, numReturnedMoves,
+                                                           locations[indexSea]);
+            registerPlayWithPlaceId(moveSea);                                                
+         }
+      }
+   }
+   free(validMoves);
+   free(locations);
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////
 
 // starts at a land location that is furthest away from any hunters
-static void randStartLocation(DraculaView dv)
+static void registerStartLocation(DraculaView dv)
 {
    int dist[NUM_REAL_PLACES];
    for (int i = 0; i < NUM_REAL_PLACES; i++) {
       if (placeIsLand(i) && i != HOSPITAL_PLACE) {
          dist[i] = closestHunter(dv, i);
       } else {
-         dist[i] = 0;
+         dist[i] = -1;
       }
    }
    PlaceId start = indexMax(dist, NUM_REAL_PLACES);
    registerPlayWithPlaceId(start);
 }
-
-
-// generates a move to keep dracula away from the hunters
-static void makeMove(DraculaView dv)
-{
-   int numReturnedMoves = -1;
-   PlaceId *validMoves = DvGetValidMoves(dv, &numReturnedMoves);
-   int numReturnedLocs = -1;
-   PlaceId *locations = DvWhereCanIGo(dv, &numReturnedLocs);
-   int dist[numReturnedLocs];
-   
-   if (numReturnedMoves > 0) {
-      // generating distances from hunters
-      for (int i = 0; i < numReturnedLocs; i++) {
-         dist[i] = closestHunter(dv, locations[i]);
-      }
-      int index;
-      index = indexMax(dist, numReturnedLocs);
-      // match location with move
-      PlaceId move = LocationToMove(dv, validMoves, numReturnedMoves, locations[index]);
-      registerPlayWithPlaceId(move);
-   } else {
-      registerPlayWithPlaceId(CASTLE_DRACULA);
-   }
-   free(validMoves);
-   free(locations);
-}
-
-static void makeMoveLand(DraculaView dv)
-{
-   int numReturnedMoves = -1;
-   PlaceId *validMoves = DvGetValidMoves(dv, &numReturnedMoves);
-   int numReturnedLocs = -1;
-   PlaceId *locations = DvWhereCanIGo(dv, &numReturnedLocs);
-   int dist[numReturnedLocs];
-   
-   if (numReturnedMoves > 0) {
-      // generating distances from hunters
-      for (int i = 0; i < numReturnedLocs; i++) {
-         dist[i] = closestHunter(dv, locations[i]);
-      }
-      int index;
-      index = indexMaxLand(dist, numReturnedLocs);
-      // match location with move
-      PlaceId move = LocationToMove(dv, validMoves, numReturnedMoves, locations[index]);
-      registerPlayWithPlaceId(move);
-   } else {
-      registerPlayWithPlaceId(CASTLE_DRACULA);
-   }
-   free(validMoves);
-   free(locations);
-}
-
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -157,16 +244,30 @@ static int indexMax(int *array, int size)
    return index;
 }
 
-static int indexMaxLand(int *array, int size)
+// returns the land location furthest away from any hunter
+static int indexMaxLand(int *distances, PlaceId* locations, int size)
 {
    int index = 0;
    for (int i = 1; i < size; i++) {
-      if (array[i] > array[index] && placeIsLand(array[i])) {
+      if (placeIsLand(locations[i]) && distances[i] > distances[index]) {
          index = i;
       }
    }
    return index;
 }
+
+// returns the sea location furthest away from any hunter
+static int indexMaxSea(int *distances, PlaceId* locations, int size)
+{
+   int index = 0;
+   for (int i = 1; i < size; i++) {
+      if (placeIsSea(locations[i]) && distances[i] < distances[index]) {
+         index = i;
+      }
+   }
+   return index;
+}
+
 
 /*
 // calcualtes probability
@@ -178,7 +279,7 @@ static bool probability(int chance)
 */
 
 // matches the location with the move dracula should make
-static PlaceId LocationToMove(DraculaView dv, PlaceId *validMoves,
+static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
                               int numValidMoves, PlaceId location)
 {
    // location is outside trail
