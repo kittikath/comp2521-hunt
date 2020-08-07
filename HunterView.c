@@ -26,20 +26,16 @@
 struct hunterView {
 	GameView gv;
 	Map map;
-	// for trail
-	PlaceId trailMoves[TRAIL_SIZE - 1];     // last 5 moves in
-	                                        // reverse order
-	PlaceId trailLocations[TRAIL_SIZE - 1]; // last 5 locations
-	                                        // in reverse order
-	int trailLength;
 };
 
 static PlaceId *hunterBfs(HunterView hv, Player hunter, PlaceId src,
                           Round r);
 static Round playerNextRound(HunterView hv, Player player);
+
 static void fillTrail(HunterView hv);
 bool trailContains(HunterView hv, PlaceId move);
 PlaceId lastLocation(HunterView hv, Player player);
+
 
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -54,7 +50,6 @@ HunterView HvNew(char *pastPlays, Message messages[])
 	
 	hv->gv = GvNew(pastPlays, messages);
 	hv->map = MapNew();
-	fillTrail(hv);
 	return hv;
 }
 
@@ -245,6 +240,7 @@ static Round playerNextRound(HunterView hv, Player player) {
 ////////////////////////////////////////////////////////////////////////
 // Your own interface functions
 
+
 // gets last location of player
 PlaceId lastLocation(HunterView hv, Player player) {
 	bool canFree = false;
@@ -306,3 +302,4 @@ int HvLastThreeKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *ro
 	if (canFree) free(locs);
 	return counter;
 }
+// TODO
