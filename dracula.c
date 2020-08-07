@@ -32,9 +32,12 @@
 ////////////////////////////////////////////////////////////////////////
 
 static void registerStartLocation(DraculaView dv);
+static bool forbiddenStartPlace(PlaceId place);
+static bool forbiddenFromSea(PlaceId place);
+static bool forbiddenPlaces(PlaceId place);
 
-static int randGen(int max);
 static void registerPlayWithPlaceId(PlaceId move);
+static int randGen(int max);
 static int indexMax(int *array, int size);
 static int indexMaxLand(int *distances, PlaceId* locations, int size);
 static int indexMaxSea(int *distances, PlaceId* locations, int size);
@@ -77,14 +80,13 @@ void decideDraculaMove(DraculaView dv)
                                                                                       
    int distancesNormal[numReturnedMoves];
    int distancesSpecial[numReturnedLocs];
-   bool hideAvailable = false;
    bool landAvailable = false;
    bool seaAvailable = false;
    int indexSea;                                                          
    
    // generate distances from hunters
    for (int i = 0; i < numReturnedMoves; i++) {
-      if (placeIsLand(validMoves[i])) {         
+      if (placeIsLand(validMoves[i]) && !forbiddenPlaces(validMoves[i]) {         
          distancesNormal[i] = closestHunter(dv, validMoves[i]);
          landAvailable = true;
       } else if (placeIsSea(validMoves[i])) {
@@ -92,15 +94,10 @@ void decideDraculaMove(DraculaView dv)
          seaAvailable = true;
          indexSea = i;
       } else {
-         if (validMoves[i] == HIDE) {
-            hideAvailable = true;
-         }
          distancesNormal[i] = 0;
       }
    }
-   
 
-   
    // index of the best normal land move
    int indexLand = indexMaxLand(distancesNormal, validMoves, numReturnedMoves);
    
@@ -120,7 +117,7 @@ void decideDraculaMove(DraculaView dv)
       if (!landAvailable || distancesNormal[indexLand] <= MAKE_SPECIAL_MOVE) {                    
          // generating distances from hunters
          for (int i = 0; i < numReturnedLocs; i++) {
-            if (placeIsLand(locations[i])) {
+            if (placeIsLand(locations[i]) && !forbiddenPlaces(locations[i])) {
                distancesSpecial[i] = closestHunter(dv, locations[i]);
                landAvailable = true;
             // sea is a very special place
@@ -134,7 +131,7 @@ void decideDraculaMove(DraculaView dv)
          }
          // index of best special land move
          indexLand = indexMaxLand(distancesSpecial, locations, numReturnedLocs);
-  
+         
          // make sea move if available and needed
          if (seaAvailable && distancesSpecial[indexLand] <= MAKE_SEA_MOVE) {
             PlaceId moveSea = locationToMove(dv, validMoves, numReturnedMoves,
@@ -146,10 +143,6 @@ void decideDraculaMove(DraculaView dv)
             PlaceId moveLand = locationToMove(dv, validMoves, numReturnedMoves,
                                                           locations[indexLand]);
             registerPlayWithPlaceId(moveLand);
-         }         
-         // make hide move if available and needed
-         if (hideAvailable && distancesSpecial[indexLand] <= MAKE_HIDE_MOVE) {
-            registerPlayWithPlaceId(HIDE);
          }
       }   
    }
@@ -204,7 +197,7 @@ static void registerStartLocation(DraculaView dv)
 {
    int dist[NUM_REAL_PLACES];
    for (int i = 0; i < NUM_REAL_PLACES; i++) {
-      if (placeIsLand(i) && i != HOSPITAL_PLACE) {
+      if (placeIsLand(i) && !forbiddenStartPlace(i)) {
          dist[i] = closestHunter(dv, i);
       } else {
          dist[i] = -1;
@@ -213,6 +206,35 @@ static void registerStartLocation(DraculaView dv)
    PlaceId start = indexMax(dist, NUM_REAL_PLACES);
    registerPlayWithPlaceId(start);
 }
+
+// list of forbidden start places
+static bool forbiddenStartPlace(PlaceId place)
+{
+   if (place == HOSPITAL_PLACE || place == CAGLIARI || place == DUBLIN ||
+       place == GALWAY) {
+      return true;   
+   }
+   return false;
+}
+
+// list of forbidden places from the sea
+static bool forbiddenFromSea(PlaceId place)
+{
+   if (place == CAGLIARI || place == DUBLIN || place == GALWAY) {
+      return true;   
+   }
+   return false;
+}
+
+// list of locations Dracula shouldn't visit on land
+static bool forbiddenPlaces(PlaceId place)
+{
+   if (place == CASTLE_DRACULA) {
+      return true;
+   }
+   return false;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Utility Functions
@@ -227,8 +249,7 @@ static int randGen(int max)
 // calls registerBestPlay but uses a PlaceId
 static void registerPlayWithPlaceId(PlaceId move)
 {
-   const char *location = placeIdToAbbrev(move);
-   char *play = strdup(location);
+   char *play = placeIdToAbbrev(move);
    registerBestPlay(play, "");
 }
 
@@ -290,6 +311,10 @@ static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
    // determine double back move
    for (int i = 0; i < numValidMoves; i++) {
       switch(validMoves[i]) {
+         case HIDE:
+            if (trail[0] == location) {
+               return HIDE;
+            }
          case DOUBLE_BACK_1:
             if (trail[0] == location) {
                return DOUBLE_BACK_1;
