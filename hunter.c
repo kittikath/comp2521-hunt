@@ -39,10 +39,10 @@ void decideHunterMove(HunterView hv)
       randStartLocation(hv);
       return;
    } 
-   if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
-      registerPlayWithPlaceId(CASTLE_DRACULA);
-      return;
-   }
+   // if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
+   //    registerPlayWithPlaceId(CASTLE_DRACULA);
+   //    return;
+   // }
    if (HvGetRound(hv)%6 == 0) {
       researchMove(hv);
       return;
@@ -107,7 +107,19 @@ void randStartLocation(HunterView hv)
    PlaceId start = NOWHERE;
    // CHEESE
    if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
-      registerPlayWithPlaceId(CASTLE_DRACULA);
+      registerPlayWithPlaceId(CONSTANTA);
+      return;
+   }
+   else if(HvGetPlayer(hv) == PLAYER_DR_SEWARD) {
+      registerPlayWithPlaceId(LISBON);
+      return;
+   }
+   else if(HvGetPlayer(hv) == PLAYER_MINA_HARKER) {
+      registerPlayWithPlaceId(LIVERPOOL);
+      return;
+   }
+   else if(HvGetPlayer(hv) == PLAYER_VAN_HELSING) {
+      registerPlayWithPlaceId(NAPLES);
       return;
    }
    while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
