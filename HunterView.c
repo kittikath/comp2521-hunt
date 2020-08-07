@@ -26,11 +26,19 @@
 struct hunterView {
 	GameView gv;
 	Map map;
+	// for trail
+	PlaceId trailMoves[TRAIL_SIZE - 1];     // last 5 moves in
+	                                        // reverse order
+	PlaceId trailLocations[TRAIL_SIZE - 1]; // last 5 locations
+	                                        // in reverse order
+	int trailLength;
 };
 
 static PlaceId *hunterBfs(HunterView hv, Player hunter, PlaceId src,
                           Round r);
 static Round playerNextRound(HunterView hv, Player player);
+static void fillTrail(HunterView hv);
+bool trailContains(HunterView hv, PlaceId move);
 
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -45,6 +53,7 @@ HunterView HvNew(char *pastPlays, Message messages[])
 	
 	hv->gv = GvNew(pastPlays, messages);
 	hv->map = MapNew();
+	fillTrail(hv);
 	return hv;
 }
 
@@ -235,4 +244,32 @@ static Round playerNextRound(HunterView hv, Player player) {
 ////////////////////////////////////////////////////////////////////////
 // Your own interface functions
 
-// TODO
+// fills the last 6 locations of dracula
+static void fillTrail(HunterView hv) {
+	int numMoves = TRAIL_SIZE - 1;
+	int numLocations = TRAIL_SIZE - 1;
+	
+	bool canFreeMoves = false;
+	bool canFreeLocations = false;
+	
+	PlaceId *moves = GvGetLastMoves(hv->gv, PLAYER_DRACULA, numMoves,
+	                                &numMoves, &canFreeMoves);
+	
+	PlaceId *locations = GvGetLastLocations(hv->gv, PLAYER_DRACULA, numLocations,
+	                                        &numLocations, &canFreeLocations);
+	
+	placesCopy(hv->trailMoves, moves, numMoves);
+	placesCopy(hv->trailLocations, locations, numLocations);
+	
+	placesReverse(hv->trailMoves, numMoves);
+	placesReverse(hv->trailLocations, numLocations);
+	
+	hv->trailLength = numMoves;
+	if (canFreeMoves) free(moves);
+	if (canFreeLocations) free(locations);
+}
+
+// checks if trail contains move
+bool trailContains(HunterView hv, PlaceId move) {
+	return placesContains(hv->trailMoves, hv->trailLength, move);
+}
