@@ -162,22 +162,22 @@ void commonLocs(PlaceId *arr1, PlaceId *arr2, int size1, int size2)
 	for (int i = 0; i < size1; i++) {
 		bool inArray = false;
 		for (int k = 0; k < size2; k++) {
-			if (arr1[i] == arr2[k) {
+			if (arr1[i] == arr2[k]) {
 				inArray = true;
 			}
 		}
 		if (inArray) {
-			commonArr[j] = arr1[i];
+			commArr[j] = arr1[i];
 			j++;
 		}
 	}
 	
 	int numCommonLocs = j;
 	
-	PlaceId *commonLocs = malloc(numCommonLocs * sizeof(commonLocs));
+	PlaceId *commonLocs = malloc(numCommonLocs * sizeof(*commonLocs));
 	
 	for (int i = 0; i < numCommonLocs; i++) {
-		commonLocs[i] = commonArr[i];
+		commonLocs[i] = commArr[i];
 	}
 	
 }
