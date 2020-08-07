@@ -43,12 +43,12 @@ void decideHunterMove(HunterView hv)
       registerPlayWithPlaceId(CASTLE_DRACULA);
       return;
    }
-   // if (HvGetRound(hv)%6 == 0) {
-   //    researchMove(hv);
-   //    return;
-   // }
+   if (HvGetRound(hv)%6 == 0) {
+      researchMove(hv);
+      return;
+   }
    randMove(hv);
-   //normalMove(hv);
+   normalMove(hv);
    restMove(hv);
 }
 
@@ -73,6 +73,7 @@ void normalMove(HunterView hv) {
 ////////////////////////////////////////////////////////////////////////
 
 // KATHS VERSION
+*/
 void normalMove(HunterView hv) {
    int round = HvGetRound(hv);
    int player = HvGetPlayer(hv);
@@ -100,7 +101,6 @@ void normalMove(HunterView hv) {
       return;
    }
 }
-*/
 
 void randStartLocation(HunterView hv)
 {
