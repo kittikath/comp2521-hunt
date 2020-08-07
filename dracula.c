@@ -86,7 +86,7 @@ void decideDraculaMove(DraculaView dv)
    
    // generate distances from hunters
    for (int i = 0; i < numReturnedMoves; i++) {
-      if (placeIsLand(validMoves[i]) && !forbiddenPlaces(validMoves[i]) {         
+      if (placeIsLand(validMoves[i]) && !forbiddenPlaces(validMoves[i])) {         
          distancesNormal[i] = closestHunter(dv, validMoves[i]);
          landAvailable = true;
       } else if (placeIsSea(validMoves[i])) {
@@ -159,7 +159,7 @@ void decideDraculaMove(DraculaView dv)
       } else {
          // generating distances from hunters
          for (int i = 0; i < numReturnedLocs; i++) {
-            if (placeIsLand(locations[i])) {
+            if (placeIsLand(locations[i]) && !forbiddenFromSea(locations[i])) {
                distancesSpecial[i] = closestHunter(dv, locations[i]);
                landAvailable = true;
             // sea is a very special place
