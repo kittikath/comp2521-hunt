@@ -180,10 +180,11 @@ PlaceId *DvWhereCanTheyGoByType(DraculaView dv, Player player,
 
 // TODO
 
-// This will return the number of rounds it takes the closest hunter to
+// This will return the number of paths it takes the closest hunter to
 // get to a given location
 int closestHunter(DraculaView dv, PlaceId location);
 
+// This will return a pointer to dracula's trail locations
 PlaceId *draculaTrail(DraculaView dv);
 
 #endif // !defined(FOD__DRACULA_VIEW_H_)
