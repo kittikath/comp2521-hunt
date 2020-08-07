@@ -39,6 +39,7 @@ static PlaceId *hunterBfs(HunterView hv, Player hunter, PlaceId src,
 static Round playerNextRound(HunterView hv, Player player);
 static void fillTrail(HunterView hv);
 bool trailContains(HunterView hv, PlaceId move);
+PlaceId lastLocation(HunterView hv, Player player);
 
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -243,6 +244,14 @@ static Round playerNextRound(HunterView hv, Player player) {
 
 ////////////////////////////////////////////////////////////////////////
 // Your own interface functions
+
+// gets last location of player
+PlaceId lastLocation(HunterView hv, Player player) {
+	bool canFree = false;
+	int returnedLocs = 0;
+	PlaceId lastloc = *GvGetLastLocations(hv->gv, player, 1, &returnedLocs, &canFree);
+	return lastloc;
+}
 
 // fills the last 6 locations of dracula
 static void fillTrail(HunterView hv) {

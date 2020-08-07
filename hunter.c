@@ -29,6 +29,8 @@ void researchMove(HunterView hv);
 void restMove(HunterView hv);
 static void registerPlayWithPlaceId(PlaceId move);
 int randGen(HunterView hv, int max);
+PlaceId prevLocation(HunterView hv);
+void randMoveWithNoCongaLine(HunterView hv);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -175,3 +177,42 @@ int randGen(HunterView hv, int max) {
     srand(time(0)*HvGetPlayer(hv) + 1);
     return rand() % max;
 }
+
+// gets last location of player
+PlaceId prevLocation(HunterView hv) {
+   return lastLocation(hv, HvGetPlayer(hv));
+}
+
+// random play AND NO ONE GROUPS UPP
+void randMoveWithNoCongaLine(HunterView hv)
+{  
+   int numReturnedLocs = -1;
+   PlaceId *validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
+   int move = randGen(hv, numReturnedLocs);
+   const char *location = placeIdToAbbrev(validLocs[move]);
+   char *play = strdup(location);
+   for (int i = 0; i < 4; i++) {
+      // if i is current player, skip check
+      if (i == HvGetPlayer(hv)) {
+         break;
+      }
+      // if the most recent location of a hunter is this hunter's current play, change
+      PlaceId lastLoc = lastLocation(hv, i);
+      if (lastLoc == validLocs[move]) {
+         // loop through all possible plays
+         for (int j = 0; j < numReturnedLocs; j++) {
+            const char *locationcpy = placeIdToAbbrev(validLocs[j]);
+            // if location is different from hunter, move there
+            if (location != locationcpy) {
+               play = strdup(locationcpy);
+               free(validLocs);
+               registerBestPlay(play, "");
+               return;
+            }
+         }
+      }
+   }
+   free(validLocs);
+   registerBestPlay(play, "");
+}
+
