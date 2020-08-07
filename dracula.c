@@ -311,10 +311,12 @@ static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
    // determine double back move
    for (int i = 0; i < numValidMoves; i++) {
       switch(validMoves[i]) {
+      	/*
          case HIDE:
             if (trail[0] == location) {
                return HIDE;
             }
+         */
          case DOUBLE_BACK_1:
             if (trail[0] == location) {
                return DOUBLE_BACK_1;
@@ -334,7 +336,11 @@ static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
          case DOUBLE_BACK_5:
             if (trail[4] == location) {
                return DOUBLE_BACK_5;
-            }         
+            }
+         case HIDE:
+            if (trail[0] == location) {
+               return HIDE;
+            }
          default:
             continue;
       }
