@@ -27,6 +27,7 @@ void normalMove(HunterView hv);
 void randMove(HunterView hv);
 void researchMove(HunterView hv);
 void restMove(HunterView hv);
+// void commonLocs(PlaceId *arr1, PlaceId *arr2, int size1, int size2);
 static void registerPlayWithPlaceId(PlaceId move);
 int randGen(HunterView hv, int max);
 
@@ -150,6 +151,37 @@ void restMove(HunterView hv) {
    }
    return;
 }
+
+/*
+// find repeated values between 2 arrays
+void commonLocs(PlaceId *arr1, PlaceId *arr2, int size1, int size2)
+{
+	int j = 0;
+	PlaceId commArr[NUM_REAL_PLACES];
+	
+	for (int i = 0; i < size1; i++) {
+		bool inArray = false;
+		for (int k = 0; k < size2; k++) {
+			if (arr1[i] == arr2[k) {
+				inArray = true;
+			}
+		}
+		if (inArray) {
+			commonArr[j] = arr1[i];
+			j++;
+		}
+	}
+	
+	int numCommonLocs = j;
+	
+	PlaceId *commonLocs = malloc(numCommonLocs * sizeof(commonLocs));
+	
+	for (int i = 0; i < numCommonLocs; i++) {
+		commonLocs[i] = commonArr[i];
+	}
+	
+}
+*/
 
 // calls registerBestPlay but uses a PlaceId
 static void registerPlayWithPlaceId(PlaceId move)
