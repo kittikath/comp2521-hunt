@@ -115,7 +115,7 @@ void randStartLocation(HunterView hv)
    }   
    const char *location = placeIdToAbbrev(start);
    char *play = strdup(location);
-   registerBestPlay(play, "Let's crash Dracula's wedding!");
+   registerBestPlay(play, "");
 }
 
 void randMove(HunterView hv)
@@ -127,7 +127,7 @@ void randMove(HunterView hv)
    const char *location = placeIdToAbbrev(validLocs[move]);
    char *play = strdup(location);
    free(validLocs);
-   registerBestPlay(play, "Don't run, I'm not the sun.");   
+   registerBestPlay(play, "");   
 }
 
 // if dracula trail is all unknown, do research
