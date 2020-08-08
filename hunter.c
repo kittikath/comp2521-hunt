@@ -19,17 +19,20 @@
 #include "HunterView.h"
 #include "Places.h"
 
-#define NUM_LAST_LOC 3
+#define NUM_LAST_LOC 2
 ////////////////////////////////////////////////////////////////////////
 
 void randStartLocation(HunterView hv);
 void randMove(HunterView hv);
 void researchMove(HunterView hv);
 void restMove(HunterView hv);
-void registerPlayWithPlaceId(PlaceId move);
+void registerPlayWithPlaceId(PlaceId move, Message message);
 PlaceId *commonLocs(PlaceId *array1, PlaceId *array2, int size1, int size2, 
                                                             int *numCommonLocs);
 int randGen(HunterView hv, int max);
+
+PlaceId prevLocation(HunterView hv);
+void randMoveWithNoCongaLine(HunterView hv);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -58,14 +61,6 @@ void decideHunterMove(HunterView hv)
    PlaceId *possibleLocs2;
    int numPossible3 = 0;
    PlaceId *possibleLocs3;
-   
-   /*
-   printf("Number of revealed locs: %d\n", numRevealed);
-   for (int i = 0; i < numRevealed; i++) {
-      printf("Revealed Loc: %s\n", placeIdToAbbrev(revealedLocs[i]));
-      printf("Rounds Ago: %d\n", revealedRounds[i]);
-   }
-   */
    
    // filling out arrays with dracula locations
    switch (numRevealed) {
@@ -109,46 +104,24 @@ void decideHunterMove(HunterView hv)
       default:
          break;
    }
-   
-   /*
-   printf("Number of possible locs: %d\n", numDraculaLocs);
-   for (int i = 0; i < numDraculaLocs; i++) {
-      printf("Possible Loc: %s\n", placeIdToAbbrev(draculaLocs[i]));
-   }
-   */
-   
    // where dracula could be should be in DRACULA_LOCS with NUM_DRACULA_LOCS
    // now you just need to find a way to it!
    // also, have darwin implement a rest function where if numRevealed == 0; and round is >= 6, they do research!!
-   
    // can do whatever from here on!
-   
+
+
+   // int numReturnedLocs = -1;
    if (numRevealed == 0) {
-      /*
-      int numPossible = 0;
-      PlaceId *possibleLocs = HvGetDraculaLocations(hv, revealedLocs[0], revealedRounds[0],
-                                                          &numPossible);
-                                                          
-      for (int i = 0; i < numPossible; i++) {
-         printf("Possible Loc: %s\n", placeIdToAbbrev(possibleLocs[i]));      
+      if(((round/10)%2==0 && round%6 == 0) || ((round/10)%2==1 && round%7 == 0)){
+         researchMove(hv);
       }
-      
-      int randLoc = randGen(hv, numPossible);
-      int pathLength = 0;
-      PlaceId *path = HvGetShortestPathTo(hv, hunter, possibleLocs[randLoc],
-                                                                   &pathLength);
-      registerPlayWithPlaceId(path[0]);
-      
-      free(path);
-      free(possibleLocs);
-      randMove(hv);
-      */
-      researchMove(hv);
+      else{
+         randMoveWithNoCongaLine(hv);
+      }
    } else if (HvGetHealth(hv, hunter) <= 4) {
    	restMove(hv); // rest if hunter is low on health
    } else {   
       // randMove(hv);
-      
       // Random move on shortest path to a possible dracula location
       int randLoc = randGen(hv, numDraculaLocs);
       while (draculaLocs[randLoc] == HvGetPlayerLocation(hv, hunter)) {
@@ -157,45 +130,37 @@ void decideHunterMove(HunterView hv)
       int pathLength = 0;
       PlaceId *path = HvGetShortestPathTo(hv, hunter, draculaLocs[randLoc],
                                                                    &pathLength);
-      registerPlayWithPlaceId(path[0]);
-      
+      registerPlayWithPlaceId(path[0], "bfs");
+      // PlaceId *validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
+      // for(int i = 0; i < numReturnedLocs; i++){
+      //    if(path[0] == validLocs[i]){
+      //       registerPlayWithPlaceId(path[0], "bfs");
+      //       break;
+      //    }
+      // }                                                            
       free(path);
       free(draculaLocs);
    }
 }
 
 
-////////////////////////////////////////////////////////////////////////
-//
-
-/*
 void randStartLocation(HunterView hv)
 {
    PlaceId start = NOWHERE;
-   while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
-      start = randGen(hv, NUM_REAL_PLACES);
-   }
-   registerPlayWithPlaceId(start);
-}
-*/
-void randStartLocation(HunterView hv)
-{
-   PlaceId start = NOWHERE;
-   // CHEESE
    if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
-      registerPlayWithPlaceId(CONSTANTA);
+      registerPlayWithPlaceId(CONSTANTA, "start location");
       return;
    }
    else if(HvGetPlayer(hv) == PLAYER_DR_SEWARD) {
-      registerPlayWithPlaceId(LISBON);
+      registerPlayWithPlaceId(LISBON, "start location");
       return;
    }
    else if(HvGetPlayer(hv) == PLAYER_MINA_HARKER) {
-      registerPlayWithPlaceId(LIVERPOOL);
+      registerPlayWithPlaceId(LIVERPOOL, "start location");
       return;
    }
    else if(HvGetPlayer(hv) == PLAYER_VAN_HELSING) {
-      registerPlayWithPlaceId(NAPLES);
+      registerPlayWithPlaceId(NAPLES, "start location");
       return;
    }
    while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
@@ -208,14 +173,14 @@ void randMove(HunterView hv)
    int numReturnedLocs = -1;
    PlaceId *validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
    int move = randGen(hv, numReturnedLocs);
-   registerPlayWithPlaceId(validLocs[move]);   
+   registerPlayWithPlaceId(validLocs[move], "random move");   
 }
 
 // if dracula trail is all unknown, do research
 void researchMove(HunterView hv) {
    PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
 
-   registerPlayWithPlaceId(hunterLocation);
+   registerPlayWithPlaceId(hunterLocation, "research");
 }
 
 // if the hunter has >= 3, rest
@@ -226,7 +191,7 @@ void restMove(HunterView hv) {
    // if player is less than 4 health, rngesus will decide if you want to 
    // play it safe or yolo
    if (HvGetHealth(hv, HvGetPlayer(hv)) <= 3 && random > 20) {
-      registerPlayWithPlaceId(hunterLocation);
+      registerPlayWithPlaceId(hunterLocation, "rest");
    }
    return;
 }
@@ -266,13 +231,47 @@ PlaceId *commonLocs(PlaceId *array1, PlaceId *array2, int size1, int size2,
 
 
 // calls registerBestPlay but uses a PlaceId
-void registerPlayWithPlaceId(PlaceId move)
+void registerPlayWithPlaceId(PlaceId move, Message message)
 {
    char *play = placeIdToAbbrev(move);
-   registerBestPlay(play, "");
+   registerBestPlay(play, message);
 }
 
 int randGen(HunterView hv, int max) {
     srand(time(0) + HvGetPlayer(hv) + HvGetRound(hv));
     return rand() % max;
+}
+
+// gets last location of player
+PlaceId prevLocation(HunterView hv) {
+   return lastLocation(hv, HvGetPlayer(hv));
+}
+
+// random play AND NO ONE GROUPS UPP
+void randMoveWithNoCongaLine(HunterView hv)
+{  
+   int numReturnedLocs = -1;
+   PlaceId *validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
+   int move = randGen(hv, numReturnedLocs);
+   const char *location = placeIdToAbbrev(validLocs[move]);
+   char *play = strdup(location);
+   for (int i = 0; i < 4; i++) {
+      // if the most recent location of a hunter is this hunter's current play, change
+      PlaceId lastLoc = lastLocation(hv, i);
+      if (lastLoc == validLocs[move] && i != HvGetPlayer(hv)) {
+         // loop through all possible plays
+         for (int j = 0; j < numReturnedLocs; j++) {
+            const char *locationcpy = placeIdToAbbrev(validLocs[j]);
+            // if location is different from hunter, move there
+            if (location != locationcpy) {
+               play = strdup(locationcpy);
+               free(validLocs);
+               registerBestPlay(play, "random congo line");
+               return;
+            }
+         }
+      }
+   }
+   free(validLocs);
+   registerBestPlay(play, "rand");
 }

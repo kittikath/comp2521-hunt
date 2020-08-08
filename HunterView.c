@@ -346,3 +346,12 @@ int HvFillDraculaLocations(HunterView hv, PlaceId locations[], Round r[], int si
    if (canFree) free(history);
    return j;
 }
+
+
+// gets last location of player
+PlaceId lastLocation(HunterView hv, Player player) {
+	bool canFree = false;
+	int returnedLocs = 0;
+	PlaceId lastloc = *GvGetLastLocations(hv->gv, player, 1, &returnedLocs, &canFree);
+	return lastloc;
+}

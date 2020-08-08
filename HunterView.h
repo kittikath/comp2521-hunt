@@ -228,4 +228,6 @@ PlaceId *HvGetDraculaLocations(HunterView hv, PlaceId src, Round r,
 // Returns the last sequence of LAND only.
 int HvFillDraculaLocations(HunterView hv, PlaceId locations[], Round r[], int size);
 
+PlaceId lastLocation(HunterView hv, Player player);
+
 #endif // !defined (FOD__HUNTER_VIEW_H_)
