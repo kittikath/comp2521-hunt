@@ -55,14 +55,13 @@ void decideHunterMove(HunterView hv)
    int numPossible2 = 0;
    PlaceId *possibleLocs2;
    int numPossible3 = 0;
-   PlaceId *possibleLocs3;   
+   PlaceId *possibleLocs3;
    
-/*   
+   printf("Number of revealed locs: %d\n", numRevealed);
    for (int i = 0; i < numRevealed; i++) {
       printf("Revealed Loc: %s\n", placeIdToAbbrev(revealedLocs[i]));
       printf("Rounds Ago: %d\n", revealedRounds[i]);
    }
-*/   
    
    // filling out arrays with dracula locations
    switch (numRevealed) {
@@ -107,6 +106,11 @@ void decideHunterMove(HunterView hv)
          break;
    }
    
+   printf("Number of possible locs: %d\n", numDraculaLocs);
+   for (int i = 0; i < numDraculaLocs; i++) {
+      printf("Possible Loc: %s\n", placeIdToAbbrev(draculaLocs[i]));
+   }
+   
    // where dracula could be should be in DRACULA_LOCS with NUM_DRACULA_LOCS
    // now you just need to find a way to it!
    // also, have darwin implement a rest function where if numRevealed == 0; and round is >= 6, they do research!!
@@ -114,6 +118,7 @@ void decideHunterMove(HunterView hv)
    // can do whatever from here on!
    
    if (numRevealed == 0) {
+      /*
       int numPossible = 0;
       PlaceId *possibleLocs = HvGetDraculaLocations(hv, revealedLocs[0], revealedRounds[0],
                                                           &numPossible);
@@ -130,8 +135,21 @@ void decideHunterMove(HunterView hv)
       
       free(path);
       free(possibleLocs);
-   } else {   
+      */
       randMove(hv);
+   } else {   
+      // randMove(hv);
+      int randLoc = randGen(hv, numDraculaLocs);
+      while (draculaLocs[randLoc] == HvGetPlayerLocation(hv, hunter)) {
+      	randLoc = randGen(hv, numDraculaLocs);
+      }
+      int pathLength = 0;
+      PlaceId *path = HvGetShortestPathTo(hv, hunter, draculaLocs[randLoc],
+                                                                   &pathLength);
+      registerPlayWithPlaceId(path[0]);
+      
+      free(path);
+      free(draculaLocs);
    }
 }
 
