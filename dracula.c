@@ -24,7 +24,7 @@
 #define MAKE_SPECIAL_MOVE 1
 #define MAKE_SEA_MOVE 1
 #define MAKE_LAND_MOVE 2
-#define MAKE_HIDE_MOVE 1
+#define MAKE_HIDE_MOVE 2
 #define HUNTER_NEAR_PORT 1 // LEAVE THIS AS 1!
 #define SPECIAL_SEA_MOVE 2
 
@@ -126,7 +126,7 @@ void decideDraculaMove(DraculaView dv)
                seaAvailable = true;
                indexSea = i;
             } else {
-               distancesSpecial[i] = 0;
+               distancesSpecial[i] = -1;
             }
          }
          // index of best special land move
@@ -144,7 +144,6 @@ void decideDraculaMove(DraculaView dv)
                                                            locations[indexSea]);
             registerPlayWithPlaceId(moveSea);
          }
-
       }   
    }
    
@@ -312,10 +311,6 @@ static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
    // determine double back or hide move
    for (int i = 0; i < numValidMoves; i++) {
       switch(validMoves[i]) {
-         case HIDE:
-            if (trail[0] == location) {
-               return HIDE;
-            }
          case DOUBLE_BACK_1:
             if (trail[0] == location) {
                return DOUBLE_BACK_1;
@@ -335,7 +330,11 @@ static PlaceId locationToMove(DraculaView dv, PlaceId *validMoves,
          case DOUBLE_BACK_5:
             if (trail[4] == location) {
                return DOUBLE_BACK_5;
-            }         
+            }   
+         case HIDE:
+            if (trail[0] == location) {
+               return HIDE;
+            }      
          default:
             continue;
       }
