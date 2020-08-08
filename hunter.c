@@ -57,11 +57,13 @@ void decideHunterMove(HunterView hv)
    int numPossible3 = 0;
    PlaceId *possibleLocs3;
    
+   /*
    printf("Number of revealed locs: %d\n", numRevealed);
    for (int i = 0; i < numRevealed; i++) {
       printf("Revealed Loc: %s\n", placeIdToAbbrev(revealedLocs[i]));
       printf("Rounds Ago: %d\n", revealedRounds[i]);
    }
+   */
    
    // filling out arrays with dracula locations
    switch (numRevealed) {
@@ -106,10 +108,12 @@ void decideHunterMove(HunterView hv)
          break;
    }
    
+   /*
    printf("Number of possible locs: %d\n", numDraculaLocs);
    for (int i = 0; i < numDraculaLocs; i++) {
       printf("Possible Loc: %s\n", placeIdToAbbrev(draculaLocs[i]));
    }
+   */
    
    // where dracula could be should be in DRACULA_LOCS with NUM_DRACULA_LOCS
    // now you just need to find a way to it!
