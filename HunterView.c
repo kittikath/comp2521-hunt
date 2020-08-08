@@ -318,7 +318,9 @@ int HvFillDraculaLocations(HunterView hv, PlaceId locations[], Round r[], int si
    Round round = HvGetRound(hv);
    int j = 0;
    for (int i = numReturnedLocs - 1; i >= 0 && j < size; i--) {
-      if (placeIsLand(history[i]) && placeIsReal(history[i])) {
+      if (placeIsSea(history[i])) {
+         break;
+      } else if (placeIsLand(history[i]) && placeIsReal(history[i])) {
          locations[j] = history[i];
          r[j] = round - i;
          j++;

@@ -217,13 +217,15 @@ PlaceId *HvWhereCanTheyGoByType(HunterView hv, Player player,
 
 // TODO
 
+
+// THE ROUND IS NUMBER OF ROUNDS AGO! IE. NO OF LINKS
 // Returns an array of locations of where the Dracula could be.
 PlaceId *HvGetDraculaLocations(HunterView hv, PlaceId src, Round r,
                                                           int *numReturnedLocs);
                                                            
 // Populates Dracula's real locations into the given array and the given round.
 // Returns the number of real locations found.
-// Returns LAND only.
+// Returns the last sequence of LAND only.
 int HvFillDraculaLocations(HunterView hv, PlaceId locations[], Round r[], int size);
 
 #endif // !defined (FOD__HUNTER_VIEW_H_)

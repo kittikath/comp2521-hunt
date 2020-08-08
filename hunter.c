@@ -25,7 +25,8 @@
 void randStartLocation(HunterView hv);
 void randMove(HunterView hv);
 void registerPlayWithPlaceId(PlaceId move);
-void commonLocs(PlaceId *arr1, PlaceId *arr2, int size1, int size2);
+PlaceId *commonLocs(PlaceId *array1, PlaceId *array2, int size1, int size2, 
+                                                            int *numCommonLocs);
 int randGen(HunterView hv, int max);
 
 ////////////////////////////////////////////////////////////////////////
@@ -42,15 +43,77 @@ void decideHunterMove(HunterView hv)
       return;
    }
    
+   // where dracula could be
    PlaceId revealedLocs[NUM_LAST_LOC];
    Round revealedRounds[NUM_LAST_LOC];
    
    int numRevealed = HvFillDraculaLocations(hv, revealedLocs, revealedRounds, NUM_LAST_LOC);
+   
+   // lists of possible dracula locations
+   int numPossible1 = 0;
+   PlaceId *possibleLocs1;
+   int numPossible2 = 0;
+   PlaceId *possibleLocs2;
+   int numPossible3 = 0;
+   PlaceId *possibleLocs3;   
+   
+/*   
    for (int i = 0; i < numRevealed; i++) {
       printf("Revealed Loc: %s\n", placeIdToAbbrev(revealedLocs[i]));
       printf("Rounds Ago: %d\n", revealedRounds[i]);
    }
-   if (numRevealed != 0) {
+*/   
+   
+   // filling out arrays with dracula locations
+   switch (numRevealed) {
+      case 3:
+         possibleLocs3 = HvGetDraculaLocations(hv, revealedLocs[2], 
+                                              revealedRounds[2], &numPossible3);     
+      case 2:
+         possibleLocs2 = HvGetDraculaLocations(hv, revealedLocs[1], 
+                                              revealedRounds[1], &numPossible2);     
+      case 1:
+         possibleLocs1 = HvGetDraculaLocations(hv, revealedLocs[0], 
+                                              revealedRounds[0], &numPossible1);                                
+      default:
+         break;
+   }
+   
+   PlaceId* draculaLocs = possibleLocs2;
+   int numDraculaLocs = numPossible2;
+   PlaceId *tmp;
+   int numTmp;   
+   
+   // sorting out arrays
+   switch (numRevealed) {
+      case 3:
+         draculaLocs = commonLocs(possibleLocs3, possibleLocs2, numPossible3, numPossible2, 
+                                                         &numDraculaLocs);
+         free(possibleLocs3);
+         free(possibleLocs2);
+      case 2:
+         numTmp = numDraculaLocs;
+         tmp = draculaLocs;
+         draculaLocs = commonLocs(tmp, possibleLocs1, numTmp, numPossible1,
+                                                         &numDraculaLocs);
+         free(tmp);
+         free(possibleLocs1);
+         break;
+      case 1:
+         draculaLocs = possibleLocs1;
+         numDraculaLocs = numPossible1;
+         break;
+      default:
+         break;
+   }
+   
+   // where dracula could be should be in DRACULA_LOCS with NUM_DRACULA_LOCS
+   // now you just need to find a way to it!
+   // also, have darwin implement a rest function where if numRevealed == 0; and round is >= 6, they do research!!
+   
+   // can do whatever from here on!
+   
+   if (numRevealed == 0) {
       int numPossible = 0;
       PlaceId *possibleLocs = HvGetDraculaLocations(hv, revealedLocs[0], revealedRounds[0],
                                                           &numPossible);
@@ -94,36 +157,38 @@ void randMove(HunterView hv)
 }
 
 
-/*
+
 // find repeated values between 2 arrays
-void commonLocs(PlaceId *arr1, PlaceId *arr2, int size1, int size2)
+PlaceId *commonLocs(PlaceId *array1, PlaceId *array2, int size1, int size2, 
+                                                             int *numCommonLocs)
 {
 	int j = 0;
-	PlaceId commArr[NUM_REAL_PLACES];
+	PlaceId commonArray[NUM_REAL_PLACES];
 	
 	for (int i = 0; i < size1; i++) {
-		bool inArray = false;
+	   bool inArray = false;
 		for (int k = 0; k < size2; k++) {
-			if (arr1[i] == arr2[k]) {
+			if (array1[i] == array2[k]) {
 				inArray = true;
+				break;
 			}
 		}
 		if (inArray) {
-			commArr[j] = arr1[i];
+			commonArray[j] = array1[i];
 			j++;
 		}
 	}
 	
-	int numCommonLocs = j;
-	
-	PlaceId *commonLocs = malloc(numCommonLocs * sizeof(*commonLocs));
-	
-	for (int i = 0; i < numCommonLocs; i++) {
-		commonLocs[i] = commArr[i];
+	// malloc and copy array over		
+	PlaceId *commonLocs = malloc(j * sizeof(*commonLocs));
+	for (int i = 0; i < j; i++) {
+		commonLocs[i] = commonArray[i];
 	}
 	
+	*numCommonLocs = j;
+	return commonLocs;
 }
-*/
+
 
 // calls registerBestPlay but uses a PlaceId
 void registerPlayWithPlaceId(PlaceId move)
