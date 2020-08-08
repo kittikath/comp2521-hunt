@@ -24,6 +24,8 @@
 
 void randStartLocation(HunterView hv);
 void randMove(HunterView hv);
+void researchMove(HunterView hv);
+void restMove(HunterView hv);
 void registerPlayWithPlaceId(PlaceId move);
 PlaceId *commonLocs(PlaceId *array1, PlaceId *array2, int size1, int size2, 
                                                             int *numCommonLocs);
@@ -139,10 +141,15 @@ void decideHunterMove(HunterView hv)
       
       free(path);
       free(possibleLocs);
-      */
       randMove(hv);
+      */
+      researchMove(hv);
+   } else if (HvGetHealth(hv, hunter) <= 4) {
+   	restMove(hv); // rest if hunter is low on health
    } else {   
       // randMove(hv);
+      
+      // Random move on shortest path to a possible dracula location
       int randLoc = randGen(hv, numDraculaLocs);
       while (draculaLocs[randLoc] == HvGetPlayerLocation(hv, hunter)) {
       	randLoc = randGen(hv, numDraculaLocs);
@@ -161,6 +168,7 @@ void decideHunterMove(HunterView hv)
 ////////////////////////////////////////////////////////////////////////
 //
 
+/*
 void randStartLocation(HunterView hv)
 {
    PlaceId start = NOWHERE;
@@ -169,6 +177,31 @@ void randStartLocation(HunterView hv)
    }
    registerPlayWithPlaceId(start);
 }
+*/
+void randStartLocation(HunterView hv)
+{
+   PlaceId start = NOWHERE;
+   // CHEESE
+   if (HvGetPlayer(hv) == PLAYER_LORD_GODALMING) {
+      registerPlayWithPlaceId(CONSTANTA);
+      return;
+   }
+   else if(HvGetPlayer(hv) == PLAYER_DR_SEWARD) {
+      registerPlayWithPlaceId(LISBON);
+      return;
+   }
+   else if(HvGetPlayer(hv) == PLAYER_MINA_HARKER) {
+      registerPlayWithPlaceId(LIVERPOOL);
+      return;
+   }
+   else if(HvGetPlayer(hv) == PLAYER_VAN_HELSING) {
+      registerPlayWithPlaceId(NAPLES);
+      return;
+   }
+   while (!placeIsLand(start) && start != HOSPITAL_PLACE) {
+      start = randGen(hv, NUM_REAL_PLACES);
+   }
+}
 
 void randMove(HunterView hv)
 {
@@ -176,6 +209,26 @@ void randMove(HunterView hv)
    PlaceId *validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
    int move = randGen(hv, numReturnedLocs);
    registerPlayWithPlaceId(validLocs[move]);   
+}
+
+// if dracula trail is all unknown, do research
+void researchMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+
+   registerPlayWithPlaceId(hunterLocation);
+}
+
+// if the hunter has >= 3, rest
+void restMove(HunterView hv) {
+   PlaceId hunterLocation = HvGetPlayerLocation(hv, HvGetPlayer(hv));
+   int random = randGen(hv, 100);
+
+   // if player is less than 4 health, rngesus will decide if you want to 
+   // play it safe or yolo
+   if (HvGetHealth(hv, HvGetPlayer(hv)) <= 3 && random > 20) {
+      registerPlayWithPlaceId(hunterLocation);
+   }
+   return;
 }
 
 
