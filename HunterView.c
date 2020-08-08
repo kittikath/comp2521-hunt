@@ -317,14 +317,30 @@ int HvFillDraculaLocations(HunterView hv, PlaceId locations[], Round r[], int si
                                                    &numReturnedLocs, &canFree);
    Round round = HvGetRound(hv);
    int j = 0;
+   
+   PlaceId *moveHistory = GvGetMoveHistory(hv->gv, PLAYER_DRACULA,
+                                                    &numReturnedLocs, &canFree);
+   
    for (int i = numReturnedLocs - 1; i >= 0 && j < size; i--) {
       if (placeIsSea(history[i])) {
          break;
       } else if (placeIsLand(history[i]) && placeIsReal(history[i])) {
-         locations[j] = history[i];
-         r[j] = round - i;
-         j++;
-      }
+	      locations[j] = history[i];
+	      r[j] = round - i;
+	      j++;
+   	} else if (moveHistory[i] == HIDE) {
+      	round--;
+      } else if (moveHistory[i] == DOUBLE_BACK_1) {
+      	round--;
+      } else if (moveHistory[i] == DOUBLE_BACK_2) {
+      	round--;
+      } else if (moveHistory[i] == DOUBLE_BACK_3) {
+      	round--;
+      } else if (moveHistory[i] == DOUBLE_BACK_4) {
+      	round--;
+      } else if (moveHistory[i] == DOUBLE_BACK_5) {
+      	round--;
+      } 
    }
    
    if (canFree) free(history);
