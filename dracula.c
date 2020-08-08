@@ -211,7 +211,9 @@ static void registerStartLocation(DraculaView dv)
 static bool forbiddenStartPlace(PlaceId place)
 {
    if (place == HOSPITAL_PLACE || place == CAGLIARI || place == DUBLIN ||
-       place == GALWAY) {
+       place == GALWAY || place == CONSTANTA || place == VARNA || 
+       place == SALONICA || place == ATHENS || place == VALONA || 
+       place == BARI || place == NAPLES || place == ROME) {
       return true;   
    }
    return false;
