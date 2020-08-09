@@ -23,6 +23,8 @@
 #include "Queue.h"
 #include "utils.h"
 
+#define NUM_LAST_LOC 3
+
 struct hunterView {
 	GameView gv;
 	Map map;
@@ -42,6 +44,7 @@ static void fillTrail(HunterView hv);
 bool trailContains(HunterView hv, PlaceId move);
 PlaceId lastLocation(HunterView hv, Player player);
 
+PlaceId *HvWhereCanDraculaGoByType(HunterView hv, int round, PlaceId location, int *numReturnedLocs);
 
 ////////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -292,7 +295,7 @@ int HvLastThreeKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *ro
 	bool canFree = true;
 	PlaceId *locs = GvGetLocationHistory(hv->gv, PLAYER_DRACULA,
 	                                     &numLocs, &canFree);
-	placesFill(locations, 3, NOWHERE);
+	placesFill(locations, NUM_LAST_LOC, NOWHERE);
 
 	int counter = 0;
 	for (Round i = numLocs - 1; i >= 0; i--) {
@@ -310,3 +313,16 @@ int HvLastThreeKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *ro
 	return counter;
 }
 // TODO
+
+PlaceId *HvWhereCanDraculaGoByType(HunterView hv, int round, PlaceId location, int *numReturnedLocs)
+{
+	
+	// If the given player hasn't made a move or the given player is
+	if (round == 0 || !placeIsReal(location)) {
+		*numReturnedLocs = 0;
+		return NULL;
+	}
+	
+	return GvGetReachableByType(hv->gv, PLAYER_DRACULA, round, location, true,
+	                            false, true, numReturnedLocs);
+}

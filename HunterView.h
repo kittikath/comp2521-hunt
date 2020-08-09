@@ -219,5 +219,6 @@ PlaceId *HvWhereCanTheyGoByType(HunterView hv, Player player,
 int HvLastThreeKnownDraculaLocation(HunterView hv, PlaceId *locations, Round *roundArr);
 PlaceId lastLocation(HunterView hv, Player player);
 
+PlaceId *HvWhereCanDraculaGoByType(HunterView hv, int round, PlaceId location, int *numReturnedLocs);
 
 #endif // !defined (FOD__HUNTER_VIEW_H_)

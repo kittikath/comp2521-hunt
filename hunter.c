@@ -24,6 +24,7 @@
 
 void randStartLocation(HunterView hv);
 void normalMove(HunterView hv);
+void oceanMove(HunterView hv);
 void randMove(HunterView hv);
 void researchMove(HunterView hv);
 void restMove(HunterView hv);
@@ -36,63 +37,112 @@ void randMoveWithNoCongaLine(HunterView hv);
 
 void decideHunterMove(HunterView hv)
 {
+   int round = HvGetRound(hv);
+   int r;
 	// TODO: Replace this with something better!
-   if (HvGetRound(hv) == 0) {
+   HvGetLastKnownDraculaLocation(hv, &r);
+   if (round == 0) {
       randStartLocation(hv);
       return;
    } 
-   if (HvGetRound(hv)%6 == 0) {
+   if (round%6 == 0) {
       researchMove(hv);
       return;
    }
    // randMove(hv);
+   // PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, &round);
+   // if (placeIsReal(draculaLocation)) {
+      
+   // }
    randMoveWithNoCongaLine(hv);
    normalMove(hv);
+   // oceanMove(hv);
    restMove(hv);
 }
 
-/*
-void normalMove(HunterView hv) {
-   int hunter = HvGetPlayer(hv);
-   int round = HvGetRound(hv);
-   int numReturnedLocs = 0;
-   PlaceId *possibleLocs = intersectingLocations(hv, hunter, round, &numReturnedLocs);
-   // if number of possible locations is greater than 0, then randomly move once towards location
-   if (numReturnedLocs > 0) {
-      // if returned loc is 1, random will return 0 which is 1st index
-      int random = randGen(numReturnedLocs);
-      int pathlength = 0;
-      PlaceId *bfs = HvGetShortestPathTo(hv, hunter, possibleLocs[random], &pathlength);
-      registerPlayWithPlaceId(bfs[0]);
-   }
-   else {
-      return;
-   }
-}
-////////////////////////////////////////////////////////////////////////
+// void oceanMove(HunterView hv){
+//    int round = HvGetRound(hv);
+//    PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, &round);
+   
+//    int pathLength = 0;
+//    int numReturnedLocs = -1;
+//    // int draculaLocs = -1;
+//    Round rounds[NUM_LAST_LOC];
+//    PlaceId draculaHistory[NUM_LAST_LOC];
+// }
 
-// KATHS VERSION
-*/
+
+
+/////////////////////////////////////////////////////////////////////////
 void normalMove(HunterView hv) {
    int round = HvGetRound(hv);
+   int r = HvGetRound(hv);
    int player = HvGetPlayer(hv);
    PlaceId draculaLocation = HvGetLastKnownDraculaLocation(hv, &round);
    PlaceId *shortestPath;
    PlaceId *validLocs;
+   PlaceId *draculaPlaces;
    int pathLength = 0;
    int numReturnedLocs = -1;
+   int draculaLocs = -1;
    Round rounds[NUM_LAST_LOC];
    PlaceId draculaHistory[NUM_LAST_LOC];
 
+   //array to find record other player locations
+   int otherHunters[3];
+   int counter = 0;
+   for(int i = 0; i < NUM_PLAYERS; i++){
+      if(i != player && i != PLAYER_DRACULA){
+         otherHunters[counter] = HvGetPlayerLocation(hv, player);
+         counter++;
+      }
+   }
+   
    if (placeIsReal(draculaLocation)) {
       int knownLocations = HvLastThreeKnownDraculaLocation(hv, draculaHistory, rounds);
-      int val = randGen(hv, knownLocations);
-      shortestPath = HvGetShortestPathTo(hv, player, draculaHistory[val], &pathLength);
-      validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
-      for (int i = 0; i < numReturnedLocs; i++){
-         if(shortestPath[0] == validLocs[i]){
-            registerPlayWithPlaceId(shortestPath[0], "normal move");
-            break;
+      // //check surrounding places of last known dracula location
+      int v;
+      // printf("current round %d, found location round %d latest? %d\n", round, rounds[knownLocations-1], rounds[0]);
+      if(r - rounds[0] == 2){
+         PlaceId location = draculaHistory[0];
+         draculaPlaces = HvWhereCanDraculaGoByType(hv, rounds[0], location, &draculaLocs);
+         v = randGen(hv, draculaLocs);
+        
+         for(int j = 0; j < draculaLocs; j++){
+            printf("placelocation: %s\n", placeIdToName(draculaPlaces[j]));
+         }
+         v = randGen(hv, draculaLocs);
+         for(int k = 0; k < draculaLocs; k++){
+            for(int h = 0; h < 3; h++){
+               if(otherHunters[h] == draculaPlaces[v]){
+                  v = randGen(hv, draculaLocs);
+                  break;
+               }
+            }
+         }
+         shortestPath = HvGetShortestPathTo(hv, player, draculaPlaces[v], &pathLength);
+         printf("get to %s by going through %s\n",  placeIdToName(draculaPlaces[v]), placeIdToName(shortestPath[0]));
+         validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
+         for (int i = 0; i < numReturnedLocs; i++){
+            if(shortestPath[0] == validLocs[i]){
+               registerPlayWithPlaceId(shortestPath[0], "power move");
+               break;
+            }
+         }
+      }
+      else{
+         int val = randGen(hv, knownLocations);
+         for (int i = 0; i < knownLocations; i++){
+            printf("trail locations: %s at round %d\n", placeIdToAbbrev(draculaHistory[i]), rounds[i]);
+         }
+         printf("current round is %d, found hints at round %d\n", r, rounds[0]);
+         shortestPath = HvGetShortestPathTo(hv, player, draculaHistory[val], &pathLength);
+         validLocs = HvWhereCanIGo(hv, &numReturnedLocs);
+         for (int i = 0; i < numReturnedLocs; i++){
+            if(shortestPath[0] == validLocs[i]){
+               registerPlayWithPlaceId(shortestPath[0], "normal move");
+               break;
+            }
          }
       }
    }
@@ -118,7 +168,7 @@ void randStartLocation(HunterView hv)
       return;
    }
    else if(HvGetPlayer(hv) == PLAYER_VAN_HELSING) {
-      registerPlayWithPlaceId(NAPLES, "start location");
+      registerPlayWithPlaceId(ROME, "start location");
       return;
    }
    while (!placeIsLand(start) && start != HOSPITAL_PLACE) {

@@ -71,7 +71,8 @@ typedef HunterView View;
 # define decideMove decideHunterMove
 # define ViewFree HvFree
 
-# define xPastPlays "GZA.... SED.... HZU...."
+// # define xPastPlays "GZA.... SED.... HZU...."
+# define xPastPlays "GLS.... SGO.... HED.... MVI.... DVR.V.. GCA.... SMI.... HNS.... MBD.... DD1T... GGR.... SZU.... HAO.... MKL.... DCNT... GAL.... SGE.... HMS.... MBC.... DBS.... GSR.... SST.... HTS.... MGA.... DIO.... GMA.... SBU.... HIO.... MCNT... DTS.... GAL.... SMR.... HAS.... MBS.... DROT.V."
 # define xMsgs { "", "", "" }
 
 #endif
@@ -86,7 +87,11 @@ int main(void)
 	ViewFree(state);
 
 	printf("Move: %s, Message: %s\n", latestPlay, latestMessage);
+	
+	decideMove(state);
 	return EXIT_SUCCESS;
+	
+	
 }
 
 // Saves characters from play (and appends a terminator)
